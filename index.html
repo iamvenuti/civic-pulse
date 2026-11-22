@@ -287,8 +287,8 @@ const UI = {
       "You can go back and change any answer until you ask for your results.",
       "If you are not sure, choose “I'm not sure”. That is a real answer.",
       "Your answers stay on this phone unless you choose to send them.",
-      "At the end one button sends your answers, and a comment if you write one. We do not ask for your name or email.",
-      `Then you see your score and where it sits on a scale from 0 to ${t}.`,
+      `At the end you see your score and where it sits on a scale from 0 to ${t}.`,
+      "With your results, one button sends us your answers, and a comment if you write one. We do not ask for your name or email.",
     ],
     listen: "Each situation has a <strong>Read aloud</strong> button if you prefer to listen.",
     thanks: "Thank you", answered: (d, t) => `Answered: ${d} of ${t}`, unsureN: (n) => `“I'm not sure”: ${n}`,
@@ -298,18 +298,17 @@ const UI = {
     restart: "Restart the test", restartYes: "Yes, restart", restartNo: "Keep my results",
     restartNote: "Your answers and score on this phone will be cleared. Answers you already sent stay sent.",
     lastScore: "Here is your last score on this phone.",
-    step1Title: "1. Send your answers (optional)",
+    step1Title: "Send your answers (optional)", home: "Home", doneTitle: "You have finished the test",
     step1Text: (c) => `We get your answers and a code for this phone, ${c}, so we can tell different people's answers apart. We do not ask for your name or email.`,
     commentLabel: "A comment on the test (optional). Some ideas:",
     sending: "Sending…", sentBtn: "Sent ✓", sendAgain: "Send again",
     failNote: "This page could not send your answers. You can send them with the form instead:", failLink: "Open the form",
     sendAnswers: "Send my answers",
     sentNote: "Your answers are sent. Thank you.",
-    step2Title: "2. See your results",
+    step2Title: "See your results",
     step2Text: "See your score, and why each answer is marked the way it is. After that, you cannot change your answers.",
     showResults: "See my results",
     confirmReveal: "Your answers will be locked.",
-    notSentWarn: "You have not sent your answers yet. If you send them later, they are marked as sent after you saw the results.",
     revealYes: "Yes, show my results", revealNo: "Not yet",
     resultsTitle: "Your results", score: (p, t) => `${p} of ${t} points`,
     counts: (c) => `Right: ${c.right} · Partly right: ${c.partial} · Wrong: ${c.wrong} · Not sure: ${c.unsure} · No answer: ${c.blank}`,
@@ -336,8 +335,8 @@ const UI = {
       "Puoi tornare indietro e cambiare le risposte, finché non chiedi i risultati.",
       "Se hai dubbi, scegli “Non saprei”: è una risposta come le altre.",
       "Le risposte restano su questo telefono, a meno che tu non decida di inviarle.",
-      "Alla fine, con un solo pulsante, invii le risposte e, se vuoi, un commento. Non chiediamo né nome né email.",
-      `Poi vedi il tuo punteggio e dove si colloca su una scala da 0 a ${t}.`,
+      `Alla fine vedi il tuo punteggio e dove si colloca su una scala da 0 a ${t}.`,
+      "Insieme ai risultati, con un solo pulsante puoi inviarci le risposte e, se vuoi, un commento. Non chiediamo né nome né email.",
     ],
     listen: "Ogni situazione ha un pulsante <strong>Ascolta</strong>, se preferisci sentire il testo invece di leggerlo.",
     thanks: "Grazie", answered: (d, t) => `Risposte date: ${d} su ${t}`, unsureN: (n) => `“Non saprei”: ${n}`,
@@ -347,18 +346,17 @@ const UI = {
     restart: "Ricomincia il test", restartYes: "Sì, ricomincia", restartNo: "Tieni i risultati",
     restartNote: "Le risposte e il punteggio su questo telefono verranno cancellati. Le risposte già inviate restano inviate.",
     lastScore: "Ecco l'ultimo punteggio ottenuto su questo telefono.",
-    step1Title: "1. Invia le tue risposte (se vuoi)",
+    step1Title: "Invia le tue risposte (se vuoi)", home: "Inizio", doneTitle: "Hai finito il test",
     step1Text: (c) => `Riceviamo le tue risposte e un codice anonimo di questo telefono, ${c}, che ci serve a distinguere le risposte di persone diverse. Non chiediamo né nome né email.`,
     commentLabel: "Un commento sul test (se vuoi). Qualche spunto:",
     sending: "Invio in corso…", sentBtn: "Inviate ✓", sendAgain: "Invia di nuovo",
     failNote: "Questa pagina non è riuscita a inviare le risposte. Puoi inviarle con il modulo:", failLink: "Apri il modulo",
     sendAnswers: "Invia le mie risposte",
     sentNote: "Risposte inviate. Grazie.",
-    step2Title: "2. Scopri i risultati",
+    step2Title: "Scopri i risultati",
     step2Text: "Vedrai il tuo punteggio e perché ogni risposta è valutata così. Dopo, però, non potrai più cambiare le risposte.",
     showResults: "Mostra i risultati",
     confirmReveal: "Da qui in poi le risposte non si possono più cambiare.",
-    notSentWarn: "Non hai ancora inviato le risposte. Se le invii dopo, ci arriveranno segnate come inviate dopo aver visto i risultati.",
     revealYes: "Sì, mostra i risultati", revealNo: "Non ancora",
     resultsTitle: "I tuoi risultati", score: (p, t) => `${p} punti su ${t}`,
     counts: (c) => `Giuste: ${c.right} · In parte giuste: ${c.partial} · Sbagliate: ${c.wrong} · Non saprei: ${c.unsure} · Senza risposta: ${c.blank}`,
@@ -385,6 +383,8 @@ let revealed = false, opened = false, attempt = 1, seenAt = null, sentLine = nul
 let sendState = "idle", comment = "", sentComment = "";
 // fromResults: a question opened from the results list; Back then returns to the results.
 let fromResults = false;
+// justSent: the answers were just sent; Home then thanks the participant (this visit only).
+let justSent = false;
 try {
   const saved = JSON.parse(localStorage.getItem(STORE) || "null");
   if (saved && typeof saved === "object") {
@@ -484,8 +484,8 @@ async function sendAnswers() {
   let ok = false;
   try { await fetch(FORM.post, { method: "POST", mode: "no-cors", body }); ok = !blocked; } catch (e) { ok = false; }
   if (!ok) { blocked = false; ok = await postViaFrame(body); }
-  if (ok) { sendState = "sent"; opened = true; sentLine = line; sentComment = comment; }
-  else sendState = "failed";
+  if (ok) { sendState = "sent"; opened = true; sentLine = line; sentComment = comment; justSent = true; save(); go(0); return; }
+  sendState = "failed";
   save(); render();
 }
 
@@ -499,6 +499,20 @@ function speak(text) {
 
 function welcome() {
   const started = Object.keys(answers).length > 0;
+  if (revealed) return `<section class="panel">
+    <p class="lede">${T().intro}</p>
+    ${justSent ? `<p class="note">${esc(T().sentNote)}</p>` : ""}
+    <section class="step">
+      <h2>${esc(T().doneTitle)}</h2>
+      <p class="score">${T().score(num(total()), num(maxTotal()))}</p>
+      ${gauge()}
+      ${confirmClear
+        ? `<p><strong>${esc(T().restartNote)}</strong></p>
+      <div class="row"><button class="big" type="button" id="clear-yes">${T().restartYes}</button><button class="big quiet" type="button" id="clear-no">${T().restartNo}</button></div>`
+        : `<div class="row"><button class="big" type="button" id="to-results">${T().showResults}</button><button class="big quiet" type="button" id="clear">${T().restart}</button></div>`}
+    </section>
+    <p><a href="#about">${esc(T().aboutInvite)}</a></p>
+  </section>`;
   return `<section class="panel">
     <p class="lede">${T().intro}</p>
     <ul>${T().rules(scored().length, num(RES.score.pass), num(maxTotal())).map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
@@ -542,8 +556,7 @@ function question(i) {
 }
 
 function sendStep() {
-  let title = T().step1Title;
-  if (revealed) title = title.replace(/^\d\.\s*/, "");
+  const title = T().step1Title;
   const same = sentLine === sendKey() && sentComment === comment;
   const label = sendState === "sending" ? T().sending : same ? T().sentBtn : sentLine ? T().sendAgain : T().sendAnswers;
   const note = sendState === "failed"
@@ -565,7 +578,7 @@ function revealStep() {
     <h2>${T().step2Title}</h2>
     <p>${esc(T().step2Text)}</p>
     ${confirmReveal
-      ? `<p><strong>${esc(T().confirmReveal)}</strong>${!opened ? ` ${esc(T().notSentWarn)}` : ""}</p>
+      ? `<p><strong>${esc(T().confirmReveal)}</strong></p>
     <div class="row"><button class="big" type="button" id="reveal-yes">${T().revealYes}</button><button class="big quiet" type="button" id="reveal-no">${T().revealNo}</button></div>`
       : `<div class="row"><button class="big" type="button" id="reveal">${T().showResults}</button></div>`}
   </section>`;
@@ -628,7 +641,6 @@ function end() {
     <h2>${T().thanks}</h2>
     <p class="summary">${T().answered(done, sc.length)}${unsure ? ` · ${T().unsureN(unsure)}` : ""}</p>
     ${missing.length ? `<p>${esc(T().missing(missing.join(", ")))}</p>` : ""}
-    ${sendStep()}
     ${revealStep()}
     ${clearRow()}
   </section>`;
@@ -650,7 +662,9 @@ function render() {
   document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === lang));
   $("eyebrow").textContent = `${T().eyebrow} · v${BANK.version}`;
   $("h1").textContent = reading ? T().aboutTitle : T().h1;
-  $("prev").textContent = fromResults && screen > 0 && screen < END ? T().backResults : T().back;
+  const atResults = screen === END && revealed;
+  $("prev").textContent = atResults ? T().home : fromResults && screen > 0 && screen < END ? T().backResults : T().back;
+  $("next").hidden = atResults;
   $("prog").style.width = `${(screen / END) * 100}%`;
   $("prev").disabled = screen === 0;
   $("next").disabled = screen === END;
@@ -703,11 +717,12 @@ function render() {
     save(); render(); window.scrollTo(0, 0);
   });
   bind("review", () => { fromResults = false; go(1); });
+  bind("to-results", () => go(END));
   $("view").querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => { fromResults = true; go(Number(b.dataset.go)); }));
 }
 
-function go(n) { returned = false; screen = Math.max(0, Math.min(END, n)); if (screen === 0 || screen === END) fromResults = false; confirmClear = false; confirmReveal = false; save(); render(); window.scrollTo(0, 0); }
-$("prev").addEventListener("click", () => go(fromResults ? END : screen - 1));
+function go(n) { returned = false; if (n !== 0) justSent = false; screen = Math.max(0, Math.min(END, n)); if (screen === 0 || screen === END) fromResults = false; confirmClear = false; confirmReveal = false; save(); render(); window.scrollTo(0, 0); }
+$("prev").addEventListener("click", () => go(screen === END && revealed ? 0 : fromResults ? END : screen - 1));
 $("next").addEventListener("click", () => go(screen + 1));
 document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => {
   lang = b.dataset.lang; load(); save(); render();
