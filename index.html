@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="Civic Pulse">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Civic Pulse Questions</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='5' y='5' width='54' height='54' rx='14' fill='%231E2833'/%3E%3Cpolyline points='12,35 22,35 27.5,43 37,19 42.5,35 52,35' fill='none' stroke='%235CC2AE' stroke-width='5.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baskervville:ital,wght@0,400..700;1,400..700&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
+<style>
+/* Layout: one column under a masthead with the mark; welcome, then one question per screen
+   (story card, question, answer cards), nav pinned at thumb reach. Keys, points and reasons ship
+   base64-encoded and show only after the participant asks for results. */
+:root {
+  --page: #f3f1ec;
+  --surface: #fcfbf8;
+  --sunk: #e9e5dc;
+  --ink: #1e2833;
+  --muted: #5d6570;
+  --line: #dbd6cb;
+  --accent: #1d6b60;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2eee9;
+  --warn: #a3402b;
+  --warn-soft: #f6e3dc;
+  --half: #8a5d00;
+  --half-soft: #f7ecd2;
+  --tile: #1e2833;
+  --pulse: #5cc2ae;
+  --shadow: rgb(30 40 51 / .10);
+  --serif: "Baskervville", "Libre Baskerville", Baskerville, Georgia, serif;
+  --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #141a21; --surface: #1e2833; --sunk: #18212b; --ink: #f2eee6; --muted: #a4abb3; --line: #304050;
+    --accent: #74c7b5; --accent-ink: #0f1a17; --accent-soft: #1f3a37; --warn: #ee9c86; --warn-soft: #3a2622; --half: #e5b65c; --half-soft: #3a3020;
+    --tile: #f2eee6; --pulse: #1d6b60; --shadow: rgb(0 0 0 / .35); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #141a21; --surface: #1e2833; --sunk: #18212b; --ink: #f2eee6; --muted: #a4abb3; --line: #304050;
+  --accent: #74c7b5; --accent-ink: #0f1a17; --accent-soft: #1f3a37; --warn: #ee9c86; --warn-soft: #3a2622; --half: #e5b65c; --half-soft: #3a3020;
+  --tile: #f2eee6; --pulse: #1d6b60; --shadow: rgb(0 0 0 / .35); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--page); color: var(--ink); font-family: var(--sans);
+  font-size: 1.0625rem; line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 42rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 1.1rem 8rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* masthead */
+.masthead { display: flex; flex-direction: column; gap: .55rem; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.brand { display: inline-flex; align-items: center; gap: .6rem; color: var(--ink); }
+.brand svg { width: 2.2rem; height: 2.2rem; flex: none; }
+.m-tile { fill: var(--tile); }
+.m-pulse { fill: none; stroke: var(--pulse); stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+.word { font-family: var(--serif); font-weight: 600; font-size: 1.45rem; line-height: 1; }
+.tools { display: flex; align-items: center; gap: .4rem; }
+.link {
+  font-size: .9rem; font-weight: 600; color: var(--accent); text-decoration: none;
+  padding: .4rem .65rem; border-radius: 999px;
+}
+.link:hover { background: var(--accent-soft); }
+.langs { display: inline-flex; gap: 2px; padding: 3px; background: var(--sunk); border: 1px solid var(--line); border-radius: 999px; }
+.langs button {
+  display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; cursor: pointer;
+  padding: .32rem .65rem .32rem .42rem; border-radius: 999px;
+  font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--muted);
+}
+.langs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--shadow); }
+.flag { display: block; width: 1.35rem; height: .9rem; border-radius: 2px; flex: none; box-shadow: 0 0 0 1px var(--line); }
+.eyebrow { margin-top: .9rem; font-size: .74rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.95rem, 7vw, 2.6rem); line-height: 1.08; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 1.3rem; line-height: 1.25; margin: 0; text-wrap: balance; }
+.progress { height: 3px; margin-top: .45rem; background: var(--line); border-radius: 2px; overflow: hidden; }
+.progress > span { display: block; height: 100%; background: var(--accent); transition: width .25s ease; }
+
+/* screens */
+.panel { display: flex; flex-direction: column; gap: 1.05rem; }
+.panel > p, .panel li { max-width: 65ch; }
+.panel ul { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .5rem; }
+.panel ul li::marker { color: var(--accent); }
+.panel a:not(.big) { color: var(--accent); font-weight: 600; text-underline-offset: .2em; }
+.lede { font-family: var(--serif); font-size: 1.3rem; line-height: 1.45; }
+.chip {
+  align-self: flex-start; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  padding: .28rem .7rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+}
+.situation {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 1rem;
+  padding: 1.05rem 1.2rem 1.2rem; display: flex; flex-direction: column; gap: .55rem;
+}
+.situation h2 {
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+  font-family: var(--sans); font-size: .76rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--accent);
+}
+.situation p { font-family: var(--serif); font-size: 1.17rem; line-height: 1.55; }
+.say {
+  display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; flex: none;
+  border: 1px solid var(--line); background: var(--page); color: var(--ink); border-radius: 999px;
+  padding: .3rem .7rem .3rem .55rem; font-size: .78rem; font-weight: 600; letter-spacing: 0; text-transform: none;
+}
+.say svg { width: 1rem; height: 1rem; }
+.say path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.question { font-family: var(--serif); font-weight: 600; font-size: 1.42rem; line-height: 1.28; text-wrap: balance; }
+.panel ul.options { list-style: none; padding: 0; gap: .55rem; }
+.opt {
+  width: 100%; text-align: left; display: flex; gap: .85rem; align-items: flex-start; cursor: pointer;
+  padding: .85rem 1rem; border-radius: .9rem; border: 1.5px solid var(--line); background: var(--surface);
+  transition: border-color .15s, background-color .15s;
+}
+.opt:hover:not([aria-disabled="true"]) { border-color: var(--accent); }
+.opt .letter {
+  flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; display: grid; place-items: center;
+  font-size: .85rem; font-weight: 700; background: var(--sunk); color: var(--muted);
+}
+.opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.opt[aria-pressed="true"] .letter { background: var(--accent); color: var(--accent-ink); }
+.opt .tick, .tag { margin-left: auto; align-self: center; font-size: .78rem; font-weight: 700; white-space: nowrap; color: var(--muted); }
+.opt .tick, .tag.ok { color: var(--accent); }
+.tag.no { color: var(--warn); }
+.tag.half { color: var(--half); }
+.opt[aria-disabled="true"] { cursor: default; }
+.opt.is-key { border-color: var(--accent); }
+.opt.is-key .letter { background: var(--accent); color: var(--accent-ink); }
+.opt.is-wrong { border: 1.5px dashed var(--warn); background: var(--warn-soft); }
+.opt.is-wrong .letter { background: var(--warn); color: var(--surface); }
+.opt.is-half { border: 1.5px dashed var(--half); background: var(--half-soft); }
+.opt.is-half .letter { background: var(--half); color: var(--surface); }
+.opt.is-mine { border-style: dashed; border-color: var(--muted); }
+.reason { background: var(--accent-soft); border-radius: .9rem; padding: 1rem 1.15rem; display: flex; flex-direction: column; gap: .35rem; }
+.reason h2 { font-family: var(--sans); font-size: .76rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
+.step {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 1rem;
+  padding: 1.1rem 1.2rem 1.2rem; display: flex; flex-direction: column; gap: .75rem;
+}
+.row { display: flex; gap: .6rem; flex-wrap: wrap; }
+.big {
+  display: inline-block; text-decoration: none; cursor: pointer; text-align: center;
+  padding: .85rem 1.35rem; border-radius: 999px; border: 1.5px solid var(--accent);
+  background: var(--accent); color: var(--accent-ink); font-size: 1rem; font-weight: 700;
+}
+.big.quiet { background: transparent; color: var(--accent); }
+.note { font-size: .86rem; color: var(--muted); }
+/* score bar: 0 to the highest score, red turning to green at the mark from the scoring workbook (--mid) */
+.gauge { position: relative; padding-top: 2.1rem; padding-bottom: 1.5rem; max-width: 32rem; }
+.track { height: 14px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .08);
+  background: linear-gradient(90deg, #8f1d1d 0%, #c0412c calc(var(--mid) * .42), #df7f36 calc(var(--mid) * .75), #e9c04c var(--mid),
+    #93c05a calc(var(--mid) + (100% - var(--mid)) * .34), #3e9a4f calc(var(--mid) + (100% - var(--mid)) * .67), #135f3a 100%); }
+.pin { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.pin b { font-size: .78rem; font-weight: 700; white-space: nowrap; padding: .12rem .5rem; border-radius: 999px; background: var(--ink); color: var(--page); font-variant-numeric: tabular-nums; }
+.pin i { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid var(--ink); }
+.pin s { width: 3px; height: 20px; margin-top: 1px; border-radius: 2px; background: var(--ink); box-shadow: 0 0 0 2px var(--page); }
+.pin.edge-l { transform: translateX(-12%); align-items: flex-start; }
+.pin.edge-r { transform: translateX(-88%); align-items: flex-end; }
+.ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 1.3rem; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ticks span { position: absolute; transform: translateX(-50%); }
+.ticks span:first-child { transform: none; }
+.ticks span:last-child { transform: translateX(-100%); }
+.ticks .mid { color: var(--ink); font-weight: 700; }
+.notch { position: absolute; bottom: 1.5rem; width: 1px; height: 22px; background: var(--ink); opacity: .35; transform: translateX(-50%); }
+.step label { display: block; font-weight: 600; margin: .6rem 0 .3rem; }
+.step textarea { width: 100%; box-sizing: border-box; min-height: 5.5rem; padding: .6rem .7rem; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: .7rem; resize: vertical; }
+.step textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.big[disabled] { opacity: .6; cursor: default; }
+.summary { color: var(--muted); font-variant-numeric: tabular-nums; }
+.score { font-family: var(--serif); font-weight: 600; font-size: 2.6rem; line-height: 1.05; font-variant-numeric: lining-nums tabular-nums; }
+.panel ul.results {
+  list-style: none; padding: 0; display: grid; gap: .4rem;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+}
+.results li { display: flex; align-items: center; gap: .5rem; padding: .3rem .4rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); }
+.ghost {
+  border: 1px solid var(--line); background: var(--page); color: var(--accent); cursor: pointer;
+  border-radius: .55rem; padding: .3rem .55rem; font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.results .ghost { min-width: 3.1rem; }
+.mark { font-size: .88rem; font-weight: 600; }
+.mark.ok { color: var(--accent); }
+.mark.no { color: var(--warn); }
+.mark.half { color: var(--half); }
+.results .pts { margin-left: auto; font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mark.na { color: var(--muted); }
+.about { display: flex; flex-direction: column; gap: .85rem; }
+.about p, .about li { max-width: 65ch; }
+.about h2 { margin-top: .9rem; font-size: 1.4rem; }
+.about ul { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .45rem; }
+.about li::marker { color: var(--accent); }
+body.reading nav { display: none; }
+body.reading .progress { visibility: hidden; }
+
+/* nav */
+nav {
+  position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: .65rem; padding-bottom: calc(.65rem + env(safe-area-inset-bottom, 0px));
+}
+nav .inner { max-width: 42rem; margin: 0 auto; display: flex; gap: .6rem; align-items: center; }
+nav button {
+  flex: 1; padding: .8rem; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--surface); font-weight: 700; cursor: pointer;
+}
+nav button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+nav button:disabled { opacity: .35; cursor: default; }
+nav .count { font-size: .82rem; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .progress > span, .opt { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="bar">
+      <span class="brand">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect class="m-tile" x="5" y="5" width="54" height="54" rx="14"/><polyline class="m-pulse" points="12,35 22,35 27.5,43 37,19 42.5,35 52,35"/></svg>
+        <span class="word">Civic Pulse</span>
+      </span>
+      <span class="tools">
+        <a class="link" id="about-link" href="#about"></a>
+        <span class="langs" role="group" aria-label="Language / Lingua">
+          <button type="button" data-lang="en" lang="en" aria-label="English"><svg class="flag" viewBox="0 0 60 40" aria-hidden="true" preserveAspectRatio="xMidYMid slice"><clipPath id="uk-s"><rect width="60" height="40"/></clipPath><clipPath id="uk-t"><path d="M30,20h30v20zv20h-30zh-30v-20zv-20h30z"/></clipPath><g clip-path="url(#uk-s)"><rect width="60" height="40" fill="#012169"/><path d="M0,0L60,40M60,0L0,40" stroke="#fff" stroke-width="8"/><path d="M0,0L60,40M60,0L0,40" clip-path="url(#uk-t)" stroke="#C8102E" stroke-width="5"/><path d="M30,0v40M0,20h60" stroke="#fff" stroke-width="12"/><path d="M30,0v40M0,20h60" stroke="#C8102E" stroke-width="7"/></g></svg>EN</button>
+          <button type="button" data-lang="it" lang="it" aria-label="Italiano"><svg class="flag" viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#CE2B37"/></svg>IT</button>
+        </span>
+      </span>
+    </div>
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 id="h1"></h1>
+    <div class="progress" aria-hidden="true"><span id="prog"></span></div>
+  </header>
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<nav>
+  <div class="inner">
+    <button id="prev" type="button"></button>
+    <span class="count" id="count"></span>
+    <button id="next" type="button" class="primary"></button>
+  </div>
+</nav>
+
+<script>
+const BANK = {"version": "0.3", "res": "eyJrZXlzIjogeyJQLjEiOiAiQiIsICIxLjEiOiAiQyIsICIxLjIiOiAiQSIsICIxLjMiOiAiQiIsICIyLjEiOiAiRCIsICIyLjIiOiAiQyIsICIyLjMiOiAiQSIsICIzLjEiOiAiQyIsICIzLjIiOiAiRCIsICIzLjMiOiAiQiIsICI0LjEiOiAiQSIsICI0LjIiOiAiQiIsICI0LjMiOiAiRCIsICI1LjEiOiAiQiIsICI1LjIiOiAiQyIsICI1LjMiOiAiRCIsICI2LjEiOiAiQyIsICI2LjIiOiAiQiIsICI2LjMiOiAiQSJ9LCAic2NvcmUiOiB7InRhYmxlIjogeyJyaWdodCI6IDEsICJwYXJ0aWFsIjogMC41LCAid3JvbmciOiAtMC41LCAidW5zdXJlIjogMH0sICJjYXQiOiB7IjEuMSI6IHsiQSI6ICJ3cm9uZyIsICJCIjogIndyb25nIiwgIkMiOiAicmlnaHQiLCAiRCI6ICJwYXJ0aWFsIiwgIj8iOiAidW5zdXJlIn0sICIxLjIiOiB7IkEiOiAicmlnaHQiLCAiQiI6ICJwYXJ0aWFsIiwgIkMiOiAid3JvbmciLCAiRCI6ICJ3cm9uZyIsICI/IjogInVuc3VyZSJ9LCAiMS4zIjogeyJBIjogIndyb25nIiwgIkIiOiAicmlnaHQiLCAiQyI6ICJ3cm9uZyIsICJEIjogIndyb25nIiwgIj8iOiAidW5zdXJlIn0sICIyLjEiOiB7IkEiOiAicGFydGlhbCIsICJCIjogIndyb25nIiwgIkMiOiAid3JvbmciLCAiRCI6ICJyaWdodCIsICI/IjogInVuc3VyZSJ9LCAiMi4yIjogeyJBIjogIndyb25nIiwgIkIiOiAid3JvbmciLCAiQyI6ICJyaWdodCIsICJEIjogIndyb25nIiwgIj8iOiAidW5zdXJlIn0sICIyLjMiOiB7IkEiOiAicmlnaHQiLCAiQiI6ICJ3cm9uZyIsICJDIjogIndyb25nIiwgIkQiOiAicGFydGlhbCIsICI/IjogInVuc3VyZSJ9LCAiMy4xIjogeyJBIjogIndyb25nIiwgIkIiOiAicGFydGlhbCIsICJDIjogInJpZ2h0IiwgIkQiOiAid3JvbmciLCAiPyI6ICJ1bnN1cmUifSwgIjMuMiI6IHsiQSI6ICJ3cm9uZyIsICJCIjogIndyb25nIiwgIkMiOiAid3JvbmciLCAiRCI6ICJyaWdodCIsICI/IjogInVuc3VyZSJ9LCAiMy4zIjogeyJBIjogInBhcnRpYWwiLCAiQiI6ICJyaWdodCIsICJDIjogIndyb25nIiwgIkQiOiAid3JvbmciLCAiPyI6ICJ1bnN1cmUifSwgIjQuMSI6IHsiQSI6ICJyaWdodCIsICJCIjogInBhcnRpYWwiLCAiQyI6ICJ3cm9uZyIsICJEIjogIndyb25nIiwgIj8iOiAidW5zdXJlIn0sICI0LjIiOiB7IkEiOiAid3JvbmciLCAiQiI6ICJyaWdodCIsICJDIjogIndyb25nIiwgIkQiOiAid3JvbmciLCAiPyI6ICJ1bnN1cmUifSwgIjQuMyI6IHsiQSI6ICJ3cm9uZyIsICJCIjogIndyb25nIiwgIkMiOiAicGFydGlhbCIsICJEIjogInJpZ2h0IiwgIj8iOiAidW5zdXJlIn0sICI1LjEiOiB7IkEiOiAid3JvbmciLCAiQiI6ICJyaWdodCIsICJDIjogInBhcnRpYWwiLCAiRCI6ICJ3cm9uZyIsICI/IjogInVuc3VyZSJ9LCAiNS4yIjogeyJBIjogInBhcnRpYWwiLCAiQiI6ICJ3cm9uZyIsICJDIjogInJpZ2h0IiwgIkQiOiAicGFydGlhbCIsICI/IjogInVuc3VyZSJ9LCAiNS4zIjogeyJBIjogIndyb25nIiwgIkIiOiAid3JvbmciLCAiQyI6ICJwYXJ0aWFsIiwgIkQiOiAicmlnaHQiLCAiPyI6ICJ1bnN1cmUifSwgIjYuMSI6IHsiQSI6ICJ3cm9uZyIsICJCIjogIndyb25nIiwgIkMiOiAicmlnaHQiLCAiRCI6ICJ3cm9uZyIsICI/IjogInVuc3VyZSJ9LCAiNi4yIjogeyJBIjogInBhcnRpYWwiLCAiQiI6ICJyaWdodCIsICJDIjogIndyb25nIiwgIkQiOiAid3JvbmciLCAiPyI6ICJ1bnN1cmUifSwgIjYuMyI6IHsiQSI6ICJyaWdodCIsICJCIjogIndyb25nIiwgIkMiOiAicGFydGlhbCIsICJEIjogIndyb25nIiwgIj8iOiAidW5zdXJlIn19LCAicGFzcyI6IDEyfSwgIndoeSI6IHsiZW4iOiB7IlAuMSI6ICJUb20gc2F5cyB3aGF0IGhlIHdpbGwgZG86IHRha2UgaGlzIHVtYnJlbGxhLiBUaGUgb3RoZXIgY2hvaWNlcyBhcmUgdGhpbmdzIGhlIGRvZXMgbm90IHNheS4iLCAiMS4xIjogIkx1Y2lhIHNheXMgdGhlIHN0YWxsIGlzIFwidGFraW5nIGN1c3RvbWVycyBhd2F5XCIgZnJvbSB0aGUgc2hvcDogcGVvcGxlIHdobyBib3VnaHQgYXQgdGhlIHNob3Agbm93IGJ1eSBhdCB0aGUgc3RhbGwuIFNoZSBkb2VzIG5vdCBjb21wYXJlIGhvdyBtdWNoIGVhY2ggcGxhY2Ugc2VsbHMgKEEpLiBCIGlzIGEgZGlmZmVyZW50IGV4cGxhbmF0aW9uLCBub3QgaGVycy4gU2hlIGRvZXMgbm90IHNheSB3aGF0IHNoZSB3aWxsIGRvIGFib3V0IGl0IChEKS4iLCAiMS4yIjogIkx1Y2lhJ3MgY2xhaW0gaXMgYWJvdXQgd2hlcmUgaGVyIHNob3AgY3VzdG9tZXJzIHdlbnQsIGFuZCBvbmx5IEEgYW5zd2VycyB0aGF0LiBHb29kIHNhbGVzIGF0IHRoZSBzdGFsbCAoQikgYW5kIGEgYnVzeSBtYXJrZXQgKEMpIGNvdWxkIGJvdGggY29tZSBmcm9tIG5ldyBjdXN0b21lcnMgd2hvIG5ldmVyIHVzZWQgaGVyIHNob3AuIFdoZXRoZXIgdGhlIHN0YWxsIHBheXMgZm9yIGl0c2VsZiAoRCkgbWF0dGVycyBmb3IgaGVyIGJ1c2luZXNzLCBub3QgZm9yIGhlciBjbGFpbS4iLCAiMS4zIjogIkEgbmV3IGJha2VyeSBuZWFyYnksIG9wZW5lZCBpbiB0aGUgc2FtZSBtb250aCwgY291bGQgdGFrZSBoZXIgY3VzdG9tZXJzIHdoZXRoZXIgb3Igbm90IHRoZSBzdGFsbCBkaWQuIFNlbGxpbmcgb3V0IGF0IHRoZSBtYXJrZXQgKEEpIGRvZXNu4oCZdCB0ZWxsIHVzIHdobyBib3VnaHQgdGhlIGJyZWFkLiBIZWFyaW5nIGZyb20gdHdvIHJlZ3VsYXIgc2hvcCBjdXN0b21lcnMgd2hvIG5vdyBidXkgYXQgdGhlIHN0YWxsIChDKSBnaXZlcyBMdWNpYSBzb21lIHN1cHBvcnQgZm9yIGhlciBleHBsYW5hdGlvbi4gRCBydWxlcyBvdXQgb25lIG90aGVyIGV4cGxhbmF0aW9uLCBhIGNoYW5nZSBpbiBob3VycywgYnV0IGl0IGRvZXMgbm90IGdpdmUgYSBuZXcgb25lLiIsICIyLjEiOiAiVGhlIHNpdHVhdGlvbiBzYXlzIFBhb2xvIGhhcyBub3QgbWVhc3VyZWQgYW55dGhpbmcgYW5kIGdvZXMgYnkgaG93IHRoZSBzdHJlZXQgZmVlbHMgYXQgb25lIHRpbWUgb2YgZGF5LiBUaGF0IGlzIHdoYXQgaXMgd3Jvbmcgd2l0aCBoaXMgcmVhc29uLiBMaXZpbmcgb24gdGhlIHN0cmVldCAoQSkgZ2l2ZXMgaGltIG1vcmUgY2hhbmNlcyB0byBub3RpY2UsIG5vdCBmZXdlci4gVGhlIHNwZWVkIGxpbWl0IChCKSBkb2VzIG5vdCB0ZWxsIHVzIHdoZXRoZXIgdGhlIGNhcnMgYXJlIHNsb3dlci4gQyBpcyBhIGNsYWltIGFib3V0IGFsbCBzaWducyB0aGF0IHRoZSBzaXR1YXRpb24gZ2l2ZXMgbm8gcmVhc29uIHRvIGJlbGlldmUsIGFuZCBpdCBpcyBub3QgYWJvdXQgUGFvbG8ncyByZWFzb24uIiwgIjIuMiI6ICJSb2FkIHdvcmtzIHRoYXQgc3RhcnRlZCBpbiB0aGUgc2FtZSBtb250aCB3b3VsZCBtYWtlIGRyaXZlcnMgc2xvdyBkb3duIHdoZXRoZXIgb3Igbm90IHRoZXkgc2F3IHRoZSBzaWduLiBBIGxhcmdlIHNpZ24gaXMgYSByZWFzb24gdGhlIHNpZ24gbWlnaHQgd29yaywgbm90IGFub3RoZXIgZXhwbGFuYXRpb24uIEIgYW5kIEQgYXJlIHNpZ25zIHRoYXQgdGhlIGNhcnMgbWF5IHJlYWxseSBiZSBzbG93ZXIsIHdoaWNoIHdlIGFscmVhZHkgc3VwcG9zZS4gVGhleSBkbyBub3Qgc2F5IHdoeS4iLCAiMi4zIjogIkEgcmVjb3JkaW5nIG9mIG1hbnkgY2FycyBvdmVyIHRpbWUgaXMgc3Ryb25nZXIgdGhhbiBhIGZlZWxpbmcgZHVyaW5nIG9uZSB3YWxrLiBUaGF0IGRvZXMgbm90IG1ha2UgUGFvbG8gYSBsaWFyIChCKTogYSBmZWVsaW5nIGNhbiBiZSBob25lc3QgYW5kIHN0aWxsIHdyb25nLiBXaGVuIG9uZSBzb3VyY2UgaXMgbXVjaCBzdHJvbmdlciwgZGlzYWdyZWVtZW50IGRvZXMgbm90IG1lYW4gd2Uga25vdyBub3RoaW5nIChDKSwgYW5kIHRoZSB0d28gZG8gbm90IGNvdW50IHRoZSBzYW1lIChEKS4iLCAiMy4xIjogIlRoZSBzYW1lIHdvcmRzIHBvc3RlZCBvbiB0aGUgc2FtZSBkYXkgYXJlIGEgd2FybmluZyBzaWduIHRoYXQgc29tZSByZXZpZXdzIG1heSBub3QgYmUgZ2VudWluZS4gVGhhdCBpcyB0aGUgcmVhc29uIHRvIGJlIGNhcmVmdWwgaGVyZS4gMjAwIGdlbnVpbmUgcmV2aWV3cyB3b3VsZCBiZSBwbGVudHkgKEEpLiBcIkFsd2F5cyBmYWtlXCIgZ29lcyB0b28gZmFyOiB0aGUgc2l0dWF0aW9uIGRvZXMgbm90IHNob3cgdGhhdCAoQikuIFJldmlld3MgZnJvbSByZWFsIGJ1eWVycyBjYW4gaGVscCBzb21lb25lIHdobyBoYXMgbm90IHRyaWVkIGEgY2hhcmdlciB5ZXQ7IHRoYXQgaXMgd2hhdCByZXZpZXdzIGFyZSBmb3IgKEQpLiIsICIzLjIiOiAiVGhlIHByb2JsZW0gaXMgdGhhdCB0aGUgcmV2aWV3cyBtYXkgbm90IGJlIGluZGVwZW5kZW50LiBBIHRlc3QgYnkgc29tZW9uZSB3aXRoIG5vIGxpbmsgdG8gdGhlIHNlbGxlciBhbnN3ZXJzIHRoYXQgcHJvYmxlbS4gTW9yZSByZXZpZXdzIGZyb20gdGhlIHNhbWUgd2Vic2l0ZSAoQSkgbWF5IGhhdmUgdGhlIHNhbWUgcHJvYmxlbS4gU2FsZXMgKEIpIHNob3cgdGhhdCBwZW9wbGUgYm91Z2h0IGl0LCBub3QgdGhhdCBpdCB3b3JrcyB3ZWxsLiBUaGUgcHJpY2UgKEMpIHNheXMgbm90aGluZyBhYm91dCBob3cgd2VsbCBpdCB3b3Jrcy4iLCAiMy4zIjogIlRoZSB0ZXN0IGFncmVlcyB0aGF0IHRoZSBjaGFyZ2VyIHdvcmtzIGFuZCBhZGRzIGEgbmV3IGZhY3Q6IGl0IGdldHMgdmVyeSBob3QuIEEgZ29vZCBjb25jbHVzaW9uIGtlZXBzIGJvdGguIEdldHRpbmcgdmVyeSBob3QgaXMgYSByZWFzb24gdG8gd29ycnksIGJ1dCB0aGUgdGVzdCBkb2VzIG5vdCBzYXkgdGhlIGNoYXJnZXIgaXMgZGFuZ2Vyb3VzIChBKS4gQyBrZWVwcyB0aGUgZ29vZCBuZXdzIGFuZCBkcm9wcyB0aGUgaGVhdCwgYW5kIGl0IGRvZXMgbm90IGFuc3dlciB0aGUgZG91YnQgYWJvdXQgdGhlIHJldmlld3MuIFRoZSB0ZXN0IGFuZCB0aGUgcmV2aWV3cyBhZ3JlZSB0aGF0IHRoZSBjaGFyZ2VyIHdvcmtzLCBzbyBEIGlzIHdyb25nLiIsICI0LjEiOiAiR2lhbm5pJ3MgbGFzdCBzZW50ZW5jZSBpcyBoaXMgbWFpbiBwb2ludDogXCJHcmVlbiB0ZWEgc3RvcHMgY29sZHMuXCIgTm90IGhhdmluZyBhIGNvbGQgc2luY2UgSmFudWFyeSAoQikgaXMgdGhlIHJlYXNvbiBoZSBnaXZlcyBmb3IgaXQsIG5vdCB0aGUgcG9pbnQgaXRzZWxmLiBIZSBzYXlzIG5vdGhpbmcgYWJvdXQgd2FybSBkcmlua3MgaW4gZ2VuZXJhbCAoQyksIGFuZCBoZSBkb2VzIG5vdCB0ZWxsIGFueW9uZSB3aGF0IHRvIGRvIChEKS4iLCAiNC4yIjogIkNvbGRzIHBhc3MgZnJvbSBwZXJzb24gdG8gcGVyc29uLCBzbyBzZWVpbmcgZmV3ZXIgcGVvcGxlIGNvdWxkIGV4cGxhaW4gd2h5IGhlIGhhcyBoYWQgbm9uZSwgd2l0aCBvciB3aXRob3V0IHRoZSB0ZWEuIEEgYW5kIEMgZml0IEdpYW5uaSdzIG93biBzdG9yeTsgdGhleSBkbyBub3QgZXhwbGFpbiBpdCBhbm90aGVyIHdheS4gRCBoYXBwZW5lZCBiZWZvcmUgdGhlIHRlYSwgYW5kIGl0IGZpdHMgaGlzIHN0b3J5IHRvby4iLCAiNC4zIjogIk9uZSBwZXJzb24sIGEgZmV3IG1vbnRocyBhbmQgbm8gY29tcGFyaXNvbiBjYW5ub3Qgc2hvdyB3aGF0IGhhcHBlbnMgdG8gb3RoZXIgcGVvcGxlLCBldmVuIGlmIGV2ZXJ5IHdvcmQgaXMgdHJ1ZS4gRHJpbmtpbmcgdGhlIHNhbWUgYW1vdW50IChCKSBzdGlsbCByZXN0cyBvbiBvbmUgcGVyc29uLiBOb3RoaW5nIGluIHRoZSBzaXR1YXRpb24gc3VnZ2VzdHMgdGhhdCBHaWFubmkgaXMgbHlpbmcgKEMpOiB0aGUgcHJvYmxlbSBpcyB3aGF0IGhpcyBzdG9yeSBjYW4gc2hvdywgbm90IHdoZXRoZXIgaXQgaXMgdHJ1ZS4iLCAiNS4xIjogIkJlaW5nIGluIHRoZSBraXRjaGVuIGdhdmUgTHVjYSB0aGUgY2hhbmNlLCBzbyBpdCBpcyBmYWlyIHRvIGFzayBoaW0uIEl0IGRvZXMgbm90IHNob3cgaGUgZGlkIGl0LiBCZWluZyB0aGUgbGFzdCBvbmUgaW4gZG9lcyBub3QgbWFrZSBoaW0gdGhlIG9ubHkgb25lOiBvdGhlcnMgbWF5IGhhdmUgZ29uZSBpbiBiZXR3ZWVuIG5pbmUgYW5kIG5vb24sIGJlZm9yZSBoaW0gKEEpLiBJdCBzdGlsbCB0ZWxscyB1cyBzb21ldGhpbmcsIHNvIEMgZ29lcyB0b28gZmFyLiBIb3cgd2VsbCBBbm5hIGtub3dzIGhlciBjb2xsZWFndWVzIGFuZCBob3cgc3VyZSBzaGUgZmVlbHMgKEQpIGFyZSBub3QgZXZpZGVuY2UgYWJvdXQgdGhlIGx1bmNoLiIsICI1LjIiOiAiVGhlIGx1bmNoIGRpc2FwcGVhcmVkIHNvbWUgdGltZSBiZXR3ZWVuIG5pbmUgYW5kIG5vb24uIEtub3dpbmcgd2hvIGVsc2Ugd2FzIGluIHRoZSBraXRjaGVuIGluIHRoYXQgdGltZSB0ZWxscyB1cyB3aG8gZWxzZSBjb3VsZCBoYXZlIHRha2VuIGl0LiBMdWNh4oCZcyBhbnN3ZXIgKEEpIHdvdWxkIHRlbGwgdXMgd2hhdCBoZSBzYXlzIGhhcHBlbmVkLiBIb3cgc3VyZSBBbm5hIGZlZWxzIChCKSBhbmQgd2hldGhlciB0aGUgdHdvIGdldCBvbiAoRCkgZG8gbm90IHRlbGwgdXMgd2hhdCBoYXBwZW5lZCB0byB0aGUgbHVuY2guIiwgIjUuMyI6ICJUaGUgY2xlYW5lcidzIGFjY291bnQgZXhwbGFpbnMgdGhlIG1pc3NpbmcgbHVuY2ggd2l0aG91dCBhbnlvbmUgdGFraW5nIGl0LCBhbmQgaXQgZml0cyB0aGUgZmFjdHM6IHRoZSBsdW5jaCBoYWQgbm8gbmFtZS4gVGhlIGJlc3QgY29uY2x1c2lvbiBjaGFuZ2VzIHdpdGggdGhlIG5ldyBmYWN0LiBMdWNhIGNvdWxkIGhhdmUgdGFrZW4gaXQgYmVmb3JlIGVsZXZlbiAoQyksIGJ1dCB0aGVyZSBpcyBub3cgYSBzaW1wbGVyIGV4cGxhbmF0aW9uIHRoYXQgZml0cyBldmVyeSBmYWN0LiBOb3RoaW5nIHN1Z2dlc3RzIHRoZSBjbGVhbmVyIGlzIHByb3RlY3RpbmcgYW55b25lIChBKS4gXCJOb2JvZHkgY2FuIGV2ZXIga25vd1wiIChCKSBpZ25vcmVzIGEgbGlrZWx5IGV4cGxhbmF0aW9uIHRoYXQgaXMgbm93IG9uIHRoZSB0YWJsZS4iLCAiNi4xIjogIlRoZSBtYW5hZ2VycyBnaXZlIG9uZSByZWFzb246IFwiSGFyZGx5IGFueW9uZSB1c2VzIHRoZSBsaWJyYXJ5LlwiIFNhdmluZyBtb25leSAoQSksIHJlYWRpbmcgb24gcGhvbmVzIChCKSBhbmQgYW5vdGhlciB1c2UgZm9yIHRoZSByb29tIChEKSBtYXkgYWxsIGJlIHRydWUsIGJ1dCB0aGUgbWFuYWdlcnMgZG8gbm90IHNheSB0aGVtLiBUaGUgcXVlc3Rpb24gYXNrcyB3aGF0IHRoZXkgc2F5LiIsICI2LjIiOiAiVGhlIHN0YWZmIHBvaW50IG91dCB0aGF0IHRoZSBtYW5hZ2VycyBtZWFzdXJlZCBvbmUga2luZCBvZiB1c2UgYW5kIGNhbGxlZCBpdCBhbGwgdXNlLiBUaGF0IHdlYWtlbnMgdGhlIG1hbmFnZXJzJyByZWFzb24uIEl0IGRvZXMgbm90IHNldHRsZSB3aGV0aGVyIHRvIGNsb3NlIHRoZSBsaWJyYXJ5IChBKTogY29zdCBhbmQgb3RoZXIgZmFjdHMgc3RpbGwgbWF0dGVyLiBSZWFkaW5nIGFuZCBzdHVkeWluZyBhcmUgdXNlIG9mIGEgbGlicmFyeSB0b28sIHNvIEMgaXMgd3JvbmcuIE5vdGhpbmcgaW4gdGhlIHNpdHVhdGlvbiBzYXlzIHdoYXQgdGhlIG1hbmFnZXJzIHdhbnQgdGhlIHJvb20gZm9yIChEKS4iLCAiNi4zIjogIkNvdW50aW5nIGV2ZXJ5b25lIHdobyBjb21lcyBpbiBtZWFzdXJlcyBhbGwga2luZHMgb2YgdXNlLCBub3Qgb25seSBib3Jyb3dpbmcuIEZpdmUgeWVhcnMgb2YgYm9ycm93aW5nIChCKSBpcyBtb3JlIG9mIHRoZSBzYW1lIG5hcnJvdyBtZWFzdXJlLiBTYXlpbmcgdGhleSB3b3VsZCBtaXNzIGl0IChDKSBpcyBub3QgdGhlIHNhbWUgYXMgdXNpbmcgaXQuIFRoZSBjb3N0IChEKSBtYXR0ZXJzIGZvciB0aGUgZGVjaXNpb24sIGJ1dCBpdCBkb2VzIG5vdCBzaG93IGhvdyBtdWNoIHRoZSBsaWJyYXJ5IGlzIHVzZWQuIn0sICJpdCI6IHsiUC4xIjogIlRvbSBkaWNlIGNvc2EgZmFyw6A6IHByZW5kZXJlIGwnb21icmVsbG8uIExlIGFsdHJlIHNjZWx0ZSBzb25vIGNvc2UgY2hlIG5vbiBkaWNlLiIsICIxLjEiOiAiTHVjaWEgZGljZSBjaGUgbGEgYmFuY2FyZWxsYSBsZSBzdGEgwqtwb3J0YW5kbyB2aWEgaSBjbGllbnRpwrsgZGVsIG5lZ296aW8sIGNpb8OoIGNoZSBjaGkgY29tcHJhdmEgaW4gbmVnb3ppbyBvcmEgY29tcHJhIGFsIG1lcmNhdG8uIE5vbiBjb25mcm9udGEgcXVhbnRvIHZlbmRvbm8gaSBkdWUgcG9zdGkgKEEpLiBCIMOoIHVuJ2FsdHJhIHNwaWVnYXppb25lLCBub24gbGEgc3VhLiBFIG5vbiBkaWNlIGNvc2EgaW50ZW5kZSBmYXJlIChEKS4iLCAiMS4yIjogIkx1Y2lhIHBhcmxhIGRpIGRvdmUgc29ubyBmaW5pdGkgaSBjbGllbnRpIGRlbCBuZWdvemlvLCBlIHNvbG8gQSByaXNwb25kZSBhIHF1ZXN0by4gTGUgYnVvbmUgdmVuZGl0ZSBhbGxhIGJhbmNhcmVsbGEgKEIpIGUgdW4gbWVyY2F0byBwaWVubyBkaSBnZW50ZSAoQykgcG90cmViYmVybyB2ZW5pcmUgZGEgY2xpZW50aSBudW92aSwgY2hlIGluIG5lZ296aW8gbm9uIHNvbm8gbWFpIGVudHJhdGkuIFNlIGxhIGJhbmNhcmVsbGEgbGUgY29udmVuZ2EgKEQpIGNvbnRhIHBlciBpIHN1b2kgYWZmYXJpLCBub24gcGVyIHF1ZWxsbyBjaGUgZGljZS4iLCAiMS4zIjogIlVuIHN1cGVybWVyY2F0byBudW92bywgYXBlcnRvIHZpY2lubyBlIG5lbGxvIHN0ZXNzbyBtZXNlLCBwb3RyZWJiZSBwb3J0YXJsZSB2aWEgY2xpZW50aSBjb24gbyBzZW56YSBsYSBiYW5jYXJlbGxhLiBJbCBmYXR0byBjaGUgTHVjaWEgYWJiaWEgdmVuZHV0byB0dXR0byBpbCBwYW5lIGFsIG1lcmNhdG8gKEEpIG5vbiBjaSBkaWNlIGNoaSBs4oCZYWJiaWEgY29tcHJhdG8uIEkgZHVlIGNsaWVudGkgY2hlIG9yYSBjb21wcmFubyBkYSBsZWkgYWwgbWVyY2F0byAoQykgZGFubm8gcXVhbGNoZSBzb3N0ZWdubyBhbGxhIHN1YSBzcGllZ2F6aW9uZS4gRCBlc2NsdWRlIHVuYSBwb3NzaWJpbGUgc3BpZWdhemlvbmUsIHVuIGNhbWJpbyBkaSBvcmFyaW8sIG1hIG5vbiBuZSBwcm9wb25lIHVuYSBudW92YS4iLCAiMi4xIjogIkxhIHNpdHVhemlvbmUgZGljZSBjaGUgUGFvbG8gbm9uIGhhIG1pc3VyYXRvIG51bGxhIGUgc2kgYmFzYSBzdSBjb21lIGdsaSBzZW1icmEgbGEgdmlhIGluIHVuIHNvbG8gbW9tZW50byBkZWxsYSBnaW9ybmF0YS4gw4ggcXVlc3RvIGNoZSBub24gdmEgbmVsIHN1byByYWdpb25hbWVudG8uIEFiaXRhcmUgbMOsIChBKSBnbGkgZMOgIHBpw7kgb2NjYXNpb25pIGRpIGFjY29yZ2Vyc2VuZSwgbm9uIG1lbm8uIElsIGxpbWl0ZSBzdWwgY2FydGVsbG8gKEIpIG5vbiBjaSBkaWNlIHNlIGxlIGF1dG8gdmFubm8gcGnDuSBwaWFuby4gQyDDqCB1bidhZmZlcm1hemlvbmUgc3UgdHV0dGkgaSBjYXJ0ZWxsaSwgZSBsYSBzaXR1YXppb25lIG5vbiBjaSBkw6AgbmVzc3VuIG1vdGl2byBwZXIgY3JlZGVyY2kuIElub2x0cmUgbm9uIHJpZ3VhcmRhIGlsIHJhZ2lvbmFtZW50byBkaSBQYW9sby4iLCAiMi4yIjogIkRlaSBsYXZvcmkgaW5pemlhdGkgbmVsbG8gc3Rlc3NvIG1lc2UgZmFyZWJiZXJvIHJhbGxlbnRhcmUgY2hpIGd1aWRhLCBjb24gbyBzZW56YSBjYXJ0ZWxsby4gVW4gY2FydGVsbG8gZ3JhbmRlIMOoIHVuIG1vdGl2byBpbiBwacO5IHBlcmNow6kgZnVuemlvbmksIG5vbiB1bidhbHRyYSBzcGllZ2F6aW9uZS4gQiBlIEQgaW5kaWNhbm8gY2hlIGZvcnNlIGxlIGF1dG8gdmFubm8gZGF2dmVybyBwacO5IHBpYW5vLCBjb3NhIGNoZSBzdGlhbW8gZ2nDoCBzdXBwb25lbmRvLiBNYSBub24gZGljb25vIHBlcmNow6kuIiwgIjIuMyI6ICJVbmEgcmVnaXN0cmF6aW9uZSBkaSB0YW50ZSBhdXRvLCBmYXR0YSBuZWwgdGVtcG8sIGNvbnRhIHBpw7kgZGkgdW4naW1wcmVzc2lvbmUgZHVyYW50ZSB1bmEgcGFzc2VnZ2lhdGEuIFF1ZXN0byBub24gZmEgZGkgUGFvbG8gdW4gYnVnaWFyZG8gKEIpOiB1bidpbXByZXNzaW9uZSBwdcOyIGVzc2VyZSBzaW5jZXJhIGUgc2JhZ2xpYXRhIGFsbG8gc3Rlc3NvIHRlbXBvLiBRdWFuZG8gdW5hIGZvbnRlIMOoIG1vbHRvIHBpw7kgc29saWRhIGRlbGwnYWx0cmEsIGlsIGRpc2FjY29yZG8gbm9uIHZ1b2wgZGlyZSBjaGUgbm9uIHNhcHBpYW1vIG5pZW50ZSAoQyksIGUgbGUgZHVlIGNvc2Ugbm9uIHZhbGdvbm8gbG8gc3Rlc3NvIChEKS4iLCAiMy4xIjogIlRhbnRlIHJlY2Vuc2lvbmkgaWRlbnRpY2hlLCBwdWJibGljYXRlIGxvIHN0ZXNzbyBnaW9ybm8sIHNvbm8gdW4gY2FtcGFuZWxsbyBkJ2FsbGFybWU6IGFsY3VuZSByZWNlbnNpb25pIHBvdHJlYmJlcm8gZXNzZXJlIGZhbHNlLiDDiCBwZXIgcXVlc3RvIGNoZSBjb252aWVuZSBmYXJlIGF0dGVuemlvbmUuIFNlIGZvc3Nlcm8gdmVyZSwgMjAwIHJlY2Vuc2lvbmkgc2FyZWJiZXJvIHBpw7kgY2hlIHN1ZmZpY2llbnRpIChBKS4gwqtTZW1wcmUgZmFsc2XCuyDDqCBlc2FnZXJhdG86IGxhIHNpdHVhemlvbmUgbm9uIGxvIGRpY2UgKEIpLiBMZSByZWNlbnNpb25pIGRpIGNoaSBsJ2hhIGNvbXByYXRvIGRhdnZlcm8gc2Vydm9ubyBwcm9wcmlvIGEgY2hpIG5vbiBsJ2hhIGFuY29yYSBwcm92YXRvIChEKS4iLCAiMy4yIjogIklsIHByb2JsZW1hIMOoIGNoZSBsZSByZWNlbnNpb25pIHBvdHJlYmJlcm8gbm9uIGVzc2VyZSBpbmRpcGVuZGVudGkuIFVuIHRlc3QgZmF0dG8gZGEgcXVhbGN1bm8gc2VuemEgbGVnYW1pIGNvbiBpbCB2ZW5kaXRvcmUgcmlzcG9uZGUgcHJvcHJpbyBhIHF1ZXN0by4gQWx0cmUgcmVjZW5zaW9uaSBzdWxsbyBzdGVzc28gc2l0byAoQSkgcG90cmViYmVybyBhdmVyZSBsbyBzdGVzc28gZGlmZXR0by4gTGUgdmVuZGl0ZSAoQikgZGljb25vIGNoZSBsYSBnZW50ZSBsJ2hhIGNvbXByYXRvLCBub24gY2hlIGZ1bnppb25hIGJlbmUuIElsIHByZXp6byAoQykgbm9uIGRpY2UgbmllbnRlIHN1IGNvbWUgZnVuemlvbmEuIiwgIjMuMyI6ICJJbCB0ZXN0IGNvbmZlcm1hIGNoZSBpbCBjYXJpY2FiYXR0ZXJpZSBmdW56aW9uYSBlIGFnZ2l1bmdlIHVuIGZhdHRvIG51b3ZvOiBzaSBzY2FsZGEgbW9sdG8uIFVuYSBidW9uYSBjb25jbHVzaW9uZSB0aWVuZSBpbnNpZW1lIGxlIGR1ZSBjb3NlLiBTY2FsZGFyc2kgbW9sdG8gw6ggdW4gbW90aXZvIHBlciBwcmVvY2N1cGFyc2ksIG1hIGlsIHRlc3Qgbm9uIGRpY2UgY2hlIHNpYSBwZXJpY29sb3NvIChBKS4gQyB0aWVuZSBsYSBidW9uYSBub3RpemlhIGUgbGFzY2lhIHBlcmRlcmUgaWwgY2Fsb3JlLCBlIG5vbiByaXNwb25kZSBhbCBkdWJiaW8gc3VsbGUgcmVjZW5zaW9uaS4gVGVzdCBlIHJlY2Vuc2lvbmkgc29ubyBkJ2FjY29yZG8gc3VsIGZhdHRvIGNoZSBmdW56aW9uYSwgcXVpbmRpIEQgw6ggc2JhZ2xpYXRhLiIsICI0LjEiOiAiR2lhbm5pIGFycml2YSBhIHF1ZXN0YSBjb25jbHVzaW9uZTogwqtJbCB0w6ggdmVyZGUgcHJldmllbmUgaWwgcmFmZnJlZGRvcmXCuy4gSWwgZmF0dG8gY2hlIGRhIGdlbm5haW8gbm9uIGFiYmlhIHByZXNvIGlsIHJhZmZyZWRkb3JlIChCKSDDqCBpbCBtb3Rpdm8gY2hlIHBvcnRhLCBub24gbGEgY29uY2x1c2lvbmUuIE5vbiBwYXJsYSBkaSBiZXZhbmRlIGNhbGRlIGluIGdlbmVyYWxlIChDKSwgZSBub24gZGljZSBhIG5lc3N1bm8gY29zYSBmYXJlIChEKS4iLCAiNC4yIjogIklsIHJhZmZyZWRkb3JlIHNpIHByZW5kZSBkYWdsaSBhbHRyaSwgcXVpbmRpIHZlZGVyZSBtZW5vIGdlbnRlIHBvdHJlYmJlIHNwaWVnYXJlIHBlcmNow6kgbm9uIGwnaGEgcHJlc28sIHTDqCBvIG5vbiB0w6guIEEgZSBDIHZhbm5vIGQnYWNjb3JkbyBjb24gbGEgc3RvcmlhIGRpIEdpYW5uaTogbm9uIGxhIHNwaWVnYW5vIGluIHVuIGFsdHJvIG1vZG8uIEFuY2hlIEQgdmEgZCdhY2NvcmRvIGNvbiBsYSBzdWEgc3RvcmlhLCBwZXJjaMOpIMOoIHN1Y2Nlc3NvIHByaW1hIGRlbCB0w6guIiwgIjQuMyI6ICJVbmEgcGVyc29uYSwgcG9jaGkgbWVzaSBlIG5lc3N1biBjb25mcm9udG8gbm9uIGJhc3Rhbm8gYSBkaXJlIGNvc2Egc3VjY2VkZSBhZ2xpIGFsdHJpLCBhbmNoZSBzZSBvZ25pIHBhcm9sYSDDqCB2ZXJhLiBCZXJuZSBsYSBzdGVzc2EgcXVhbnRpdMOgIChCKSByZXN0YSBjb211bnF1ZSBsJ2VzcGVyaWVuemEgZGkgdW5hIHNvbGEgcGVyc29uYS4gTmllbnRlIG5lbGxhIHNpdHVhemlvbmUgZmEgcGVuc2FyZSBjaGUgR2lhbm5pIG1lbnRhIChDKTogaWwgcHJvYmxlbWEgw6ggY29zYSBwdcOyIGRpbW9zdHJhcmUgbGEgc3VhIHN0b3JpYSwgbm9uIHNlIHNpYSB2ZXJhLiIsICI1LjEiOiAiRXNzZXJlIGVudHJhdG8gaW4gY3VjaW5hIGhhIGRhdG8gYSBMdWNhIGwnb2NjYXNpb25lLCBxdWluZGkgw6ggZ2l1c3RvIGNoaWVkZXJlIGEgbHVpLiBNYSBub24gZGltb3N0cmEgY2hlIHNpYSBzdGF0byBsdWkuIEVzc2VyZSBsJ3VsdGltbyBub24gdnVvbCBkaXJlIGVzc2VyZSBsJ3VuaWNvOiB0cmEgbGUgbm92ZSBlIG1lenpvZ2lvcm5vIHBvdHJlYmJlcm8gZXNzZXJlIGVudHJhdGUgYWx0cmUgcGVyc29uZSwgcHJpbWEgZGkgbHVpIChBKS4gUXVhbGNvc2EgcGVyw7IgY2kgZGljZSwgcXVpbmRpIEMgZXNhZ2VyYS4gUXVhbnRvIEFubmEgY29ub3NjYSBpIGNvbGxlZ2hpIGUgcXVhbnRvIHNpYSBzaWN1cmEgKEQpIG5vbiBzb25vIHByb3ZlIHN1IGNoZSBmaW5lIGFiYmlhIGZhdHRvIGlsIHByYW56by4iLCAiNS4yIjogIklsIHByYW56byDDqCBzcGFyaXRvIHRyYSBsZSBub3ZlIGUgbWV6em9naW9ybm8uIFNhcGVyZSBjaGkgYWx0cm8gw6ggc3RhdG8gaW4gY3VjaW5hIGluIHF1ZWxsZSBvcmUgY2kgZGljZSBjaGkgYWx0cm8gcG90cmViYmUgYXZlcmxvIHByZXNvLiBMYSByaXNwb3N0YSBkaSBMdWNhIChBKSBjaSBkaWNlIGNvc2Egc29zdGllbmUgbHVpLiBRdWFudG8gQW5uYSBzaWEgc2ljdXJhIChCKSBlIHNlIGkgZHVlIHZhZGFubyBkJ2FjY29yZG8gKEQpIG5vbiBkaWNvbm8gY29zYSDDqCBzdWNjZXNzbyBhbCBwcmFuem8uIiwgIjUuMyI6ICJJbCByYWNjb250byBkZWxsJ2FkZGV0dGEgc3BpZWdhIHBlcmNow6kgaWwgcHJhbnpvIMOoIHNwYXJpdG8gc2VuemEgY2hlIG5lc3N1bm8gbCdhYmJpYSBwcmVzbywgZSBjb21iYWNpYSBjb24gaSBmYXR0aTogc3VsIHByYW56byBub24gYydlcmEgaWwgbm9tZS4gRGF2YW50aSBhIHVuIGZhdHRvIG51b3ZvLCBsYSBjb25jbHVzaW9uZSBtaWdsaW9yZSBjYW1iaWEuIEx1Y2EgcG90cmViYmUgYXZlcmxvIHByZXNvIHByaW1hIGRlbGxlIHVuZGljaSAoQyksIG1hIG9yYSBjJ8OoIHVuYSBzcGllZ2F6aW9uZSBwacO5IHNlbXBsaWNlLCBjaGUgdGllbmUgY29udG8gZGkgdHV0dGkgaSBmYXR0aS4gTmllbnRlIGZhIHBlbnNhcmUgY2hlIGwnYWRkZXR0YSB2b2dsaWEgY29wcmlyZSBxdWFsY3VubyAoQSkuIMKrTm9uIHNpIHBvdHLDoCBtYWkgc2FwZXJlwrsgKEIpIGlnbm9yYSB1bmEgc3BpZWdhemlvbmUgcHJvYmFiaWxlIGNoZSBhZGVzc28gYWJiaWFtbyBkYXZhbnRpLiIsICI2LjEiOiAiTGEgZGlyZXppb25lIGTDoCB1biBzb2xvIG1vdGl2bzogwqtRdWFzaSBuZXNzdW5vIGxhIHVzYcK7LiBJbCByaXNwYXJtaW8gKEEpLCBsYSBsZXR0dXJhIHN1bCB0ZWxlZm9ubyAoQikgZSB1biBhbHRybyB1c28gZGVsbGEgc3RhbnphIChEKSBwb3RyZWJiZXJvIGFuY2hlIGVzc2VyZSB2ZXJpLCBtYSBsYSBkaXJlemlvbmUgbm9uIGxpIGRpY2UuIExhIGRvbWFuZGEgY2hpZWRlIGNvc2EgZGljZS4iLCAiNi4yIjogIkkgZGlwZW5kZW50aSBmYW5ubyBub3RhcmUgY2hlIGxhIGRpcmV6aW9uZSBoYSBjb250YXRvIHVuIHNvbG8gdGlwbyBkaSB1c28sIGkgcHJlc3RpdGksIGUgbCdoYSBzY2FtYmlhdG8gcGVyIGwndXNvIGNvbXBsZXNzaXZvLiBRdWVzdG8gaW5kZWJvbGlzY2UgaWwgbW90aXZvIGRlbGxhIGRpcmV6aW9uZS4gTWEgbm9uIGRlY2lkZSBzZSBjaGl1ZGVyZSBvIG5vIGxhIGJpYmxpb3RlY2EgKEEpOiBpbCBjb3N0byBlIGFsdHJpIGZhdHRpIGNvbnRhbm8gYW5jb3JhLiBMZWdnZXJlIGUgc3R1ZGlhcmUgc29ubyBhbmNoZSBsb3JvIG1vZGkgZGkgdXNhcmUgdW5hIGJpYmxpb3RlY2EsIHF1aW5kaSBDIMOoIHNiYWdsaWF0YS4gRSBuaWVudGUgbmVsbGEgc2l0dWF6aW9uZSBkaWNlIHBlciBjb3NhIGxhIGRpcmV6aW9uZSB2b2dsaWEgbGEgc3RhbnphIChEKS4iLCAiNi4zIjogIkNvbnRhcmUgdHV0dGUgbGUgcGVyc29uZSBjaGUgZW50cmFubyBtaXN1cmEgb2duaSB0aXBvIGRpIHVzbywgbm9uIHNvbG8gaSBwcmVzdGl0aS4gQ2lucXVlIGFubmkgZGkgcHJlc3RpdGkgKEIpIHNvbm8gc29sbyBhbHRyaSBkYXRpIHByZXNpIGNvbiBsYSBzdGVzc2EgbWlzdXJhIGxpbWl0YXRhLiBEaXJlIGNoZSBsYSBiaWJsaW90ZWNhIG1hbmNoZXJlYmJlIChDKSBub24gw6ggbGEgc3Rlc3NhIGNvc2EgY2hlIHVzYXJsYS4gSWwgY29zdG8gKEQpIGNvbnRhIHBlciBsYSBkZWNpc2lvbmUsIG1hIG5vbiBkaWNlIHF1YW50byB2aWVuZSB1c2F0YSBsYSBiaWJsaW90ZWNhLiJ9fX0=", "about": {"en": "<h2>The spirit<\/h2><p>When we vote, we help choose who will exercise political power. How do we make that choice? Civic Pulse starts from the idea that choosing well takes time, attention and a willingness to think for yourself. Neither a person’s degree nor the party they support tells us whether they do that. That’s the idea we want to examine.<\/p><h2>The principle<\/h2><p>People who hold office use political power over others. Voters use it too, in a different way: they choose who holds office.<\/p><p>Our working principle is that both should require a check of fitness, with the same degree of care. We started from the comparison with a driving test, where people show they are ready before they do something that can affect others.<\/p><p>This principle is part of the design, and we are testing it. It does not describe any current law, and we do not yet know whether it holds up.<\/p><h2>The core idea<\/h2><p>A check of fitness has to be fair to everyone who takes it. So Civic Pulse uses a test of critical thinking: how a person weighs reasons, evidence and conclusions.<\/p><p>The questions ask you to weigh the information in a short story and choose the answer that best fits the facts. The test does not ask what you think about politics, and no answer gets a point for agreeing with any side.<\/p><h2>The approach<\/h2><ul><li>Each question starts from a short everyday situation: a bakery, a speed sign, a lunch that went missing. The situation gives you every fact you need.<\/li><li>There is no clock. You can stop, go back and change an answer.<\/li><li>We aim to use everyday words so you can focus on the reasoning.<\/li><li>You can listen to the questions as well as read them, so people who cannot see the screen can take part.<\/li><li>An app applies the same scoring rules to everyone, so no examiner&#x27;s personal view affects a result. Whether that makes the test fair is something we still have to check.<\/li><li>Every question has a written explanation of its answer, so anyone can see why it is marked the way it is.<\/li><li>The questions are our own. Existing reasoning tests, such as the Watson-Glaser, gave us ideas, but we did not copy their questions.<\/li><\/ul><h2>How the score works<\/h2><p>Every answer you give scores points. The answer that fits the facts best scores one point. Some other answers are partly right: they point the right way but claim too much, or they reach the right answer for the wrong reason. These score half a point. A clearly wrong answer takes half a point away. “I&#x27;m not sure” scores nothing, and so does a question you skip, which means a wrong guess costs you more than an honest “I&#x27;m not sure”. With 18 questions, the highest score is 18. A coloured bar then shows where your score sits, from red to green, with the turn at about 12 points.<\/p><p>We take points away so that guessing does not pay. Someone who picked answers at random would end up with about one point. Which answers count as partly right is our own judgement, and this draft is testing that too.<\/p><h2>Where we are<\/h2><p>The work has two phases. In the first we define the principles and the test. In the second a small group of friends and family tries the test, and we change the principles where their feedback shows we got something wrong.<\/p><p>This preview is a draft: 18 questions in six situations, in English and Italian. Nobody is told they passed or failed. The bar turns from red to green at about 12 points; that point is a first choice, and the pilot will show whether it is right. At the end you see your score, where it sits on the bar, and the explanation for each answer. If you like, one button sends us your answers, with an anonymous comment if you write one. Your answers stay on your device unless you send them.<\/p><h2>What we have not answered<\/h2><ul><li>What would passing the test give someone, and how would that relate to the right to vote they already have?<\/li><li>How can a test avoid rewarding schooling, fluent speech or answers learned by heart?<\/li><li>Who should write and review the questions, and how could someone challenge a result?<\/li><li>In the past, tests for voting have been used to keep people out. How do we make sure this one could never be used that way?<\/li><\/ul><p>Your feedback is how we find out where this thinking is wrong.<\/p>", "it": "<h2>Lo spirito<\/h2><p>Quando votiamo, contribuiamo a scegliere chi eserciterà il potere politico. Come arriviamo a quella scelta? Civic Pulse parte dall’idea che per scegliere bene servano tempo, attenzione e la volontà di ragionare con la propria testa. Né un titolo di studio né il partito che una persona sostiene ci dicono se lo fa. È questa l’idea che vogliamo mettere alla prova.<\/p><h2>Il principio<\/h2><p>Chi ha una carica politica esercita un potere sugli altri. Anche chi vota lo esercita, in modo diverso: sceglie chi avrà quella carica.<\/p><p>Il principio da cui partiamo è che in tutti e due i casi serva una verifica di idoneità, fatta con la stessa cura. L&#x27;idea viene dal confronto con l&#x27;esame della patente: prima di fare qualcosa che può avere conseguenze sugli altri, si dimostra di essere pronti.<\/p><p>Questo principio fa parte del progetto, e lo stiamo mettendo alla prova: non descrive nessuna legge in vigore, e non sappiamo ancora se regge.<\/p><h2>L&#x27;idea centrale<\/h2><p>Una verifica di idoneità deve essere equa per chiunque la affronti. Per questo Civic Pulse usa un test di pensiero critico, cioè di come una persona pesa motivi, prove e conclusioni.<\/p><p>Le domande ti chiedono di valutare le informazioni di una breve storia e di scegliere la risposta più coerente con i fatti. Il test non chiede cosa pensi della politica, e nessuna risposta viene premiata perché dà ragione a una parte.<\/p><h2>Il metodo<\/h2><ul><li>Ogni domanda parte da una breve situazione quotidiana: una panetteria, un cartello stradale, un pranzo sparito. Tutti i fatti che servono sono nella situazione.<\/li><li>Non c&#x27;è un tempo limite: puoi fermarti, tornare indietro e cambiare una risposta.<\/li><li>Cerchiamo di usare parole comuni, così puoi concentrarti sul ragionamento.<\/li><li>Le domande si possono ascoltare oltre che leggere: così può partecipare anche chi non vede lo schermo.<\/li><li>Un&#x27;app applica a tutti le stesse regole di punteggio, così il giudizio personale di un esaminatore non pesa sul risultato. Se questo basti a rendere il test equo, dobbiamo ancora verificarlo.<\/li><li>Per ogni domanda c&#x27;è una spiegazione scritta della risposta giusta, così chiunque può capire perché è valutata in quel modo.<\/li><li>Le domande sono scritte da noi. Test di ragionamento già esistenti, come il Watson-Glaser, ci hanno dato qualche idea, ma non ne abbiamo copiato le domande.<\/li><\/ul><h2>Come funziona il punteggio<\/h2><p>Ogni risposta vale dei punti. La risposta più coerente con i fatti vale un punto. Alcune altre risposte sono in parte giuste: vanno nella direzione giusta ma dicono troppo, oppure arrivano alla risposta giusta per un motivo sbagliato. Queste valgono mezzo punto. Una risposta chiaramente sbagliata toglie mezzo punto. “Non saprei” non vale niente, e neanche una domanda lasciata senza risposta: per questo un tentativo sbagliato costa più di un “Non saprei” sincero. Con 18 domande, il punteggio massimo è 18. Poi una barra colorata mostra dove si colloca il tuo punteggio, dal rosso al verde, con il passaggio intorno ai 12 punti.<\/p><p>Togliamo punti perché tirare a indovinare non convenga. Chi scegliesse le risposte a caso arriverebbe più o meno a un punto. Quali risposte contino come in parte giuste lo decidiamo noi, e anche questo è uno degli aspetti che la bozza mette alla prova.<\/p><h2>A che punto siamo<\/h2><p>Il lavoro è diviso in due fasi. Nella prima definiamo i principi e il test. Nella seconda un piccolo gruppo di amici e familiari prova il test, e noi correggiamo i principi dove i loro commenti mostrano che abbiamo sbagliato qualcosa.<\/p><p>Questa anteprima è una bozza: 18 domande in sei situazioni, in italiano e in inglese. Nessuno viene promosso o bocciato. La barra passa dal rosso al verde intorno ai 12 punti: è una prima scelta, e la prova ci dirà se è quella giusta. Alla fine vedi il tuo punteggio, dove si colloca sulla barra e la spiegazione di ogni risposta. Se vuoi, con un solo pulsante ci invii le risposte, insieme a un commento anonimo se lo scrivi. Le risposte restano sul tuo dispositivo, a meno che tu non decida di inviarle.<\/p><h2>Le domande ancora aperte<\/h2><ul><li>Cosa otterrebbe chi supera il test, e che rapporto avrebbe con il diritto di voto che ha già?<\/li><li>Come può un test evitare di premiare chi ha studiato di più, chi parla meglio o chi impara le risposte a memoria?<\/li><li>Chi dovrebbe scrivere e rivedere le domande, e come si potrebbe contestare un risultato?<\/li><li>In passato i test per poter votare sono stati usati per escludere certe persone. Come possiamo garantire che questo non venga mai usato così?<\/li><\/ul><p>I tuoi commenti ci servono a capire dove questo ragionamento non regge.<\/p>"}, "langs": {"en": [{"title": "Practice (not scored)", "text": "Tom looks out of the window and sees that it is raining. He says: \"It's raining, so I'll take my umbrella.\"", "questions": [{"id": "P.1", "q": "What is Tom going to do?", "options": [{"letter": "A", "text": "Stay at home"}, {"letter": "B", "text": "Take his umbrella"}, {"letter": "C", "text": "Buy a new umbrella"}]}]}, {"title": "1. The bakery", "text": "Lucia has a small bakery. Last month she also started selling her bread at the weekly street market. In the same month, sales in her shop went down. Lucia says: \"The market stall is taking customers away from my shop.\"", "questions": [{"id": "1.1", "q": "What does Lucia think is happening?", "options": [{"letter": "A", "text": "Her market stall now sells more bread than her shop"}, {"letter": "B", "text": "People in town are buying less bread than before"}, {"letter": "C", "text": "Her shop customers now buy at her stall instead"}, {"letter": "D", "text": "She should stop selling at the market to save her shop"}]}, {"id": "1.2", "q": "Which fact would help most to check whether Lucia is right?", "options": [{"letter": "A", "text": "Whether her shop customers now buy at the stall"}, {"letter": "B", "text": "How much bread she has sold at the stall each week since it opened"}, {"letter": "C", "text": "How many people visit the street market each week"}, {"letter": "D", "text": "Whether her stall makes more money than it costs her"}]}, {"id": "1.3", "q": "Which fact, if true, could also explain why her shop sales went down?", "options": [{"letter": "A", "text": "Her bread sold out at the market every week"}, {"letter": "B", "text": "A new supermarket with a bakery opened on her street last month"}, {"letter": "C", "text": "Two regular customers from the shop told her they now buy from her stall"}, {"letter": "D", "text": "Her shop kept the same opening hours as before"}]}]}, {"title": "2. The speed sign", "text": "On a quiet street where people live, cars often drove fast. In March, the town put up a sign that shows the speed limit. In April, a neighbour, Paolo, says: \"Since the sign went up, the cars are slower. The sign works.\" Paolo has not measured how fast the cars go. He says it feels slower when he walks his dog in the morning.", "questions": [{"id": "2.1", "q": "What is wrong with Paolo's reason?", "options": [{"letter": "A", "text": "He lives on the street, so his view counts for less than someone passing through"}, {"letter": "B", "text": "He does not say what speed limit the sign shows, so we cannot check him"}, {"letter": "C", "text": "Signs like this one never change how people drive, so he must be wrong"}, {"letter": "D", "text": "He did not measure anything. He goes by his morning walks"}]}, {"id": "2.2", "q": "Suppose the cars really are slower in April. Which fact would mean the sign may not be the reason?", "options": [{"letter": "A", "text": "The sign is large, bright and easy to see from a moving car"}, {"letter": "B", "text": "Several other neighbours also say the cars are slower now"}, {"letter": "C", "text": "Road works began on the street in April, and drivers slow down to pass them"}, {"letter": "D", "text": "There were fewer accidents on the street in April than in the months before the sign"}]}, {"id": "2.3", "q": "Another neighbour, Sara, has a camera that recorded the speed of cars before and after the sign went up. It shows almost no change. What is the best thing to think now?", "options": [{"letter": "A", "text": "Sara's recording is better evidence, so the sign has probably not made the cars slower"}, {"letter": "B", "text": "Paolo is not telling the truth about the cars on his street"}, {"letter": "C", "text": "The two neighbours disagree, so we cannot know anything about the sign"}, {"letter": "D", "text": "Both kinds of evidence count the same, so the truth is somewhere in between the two"}]}]}, {"title": "3. The phone charger", "text": "A website sells a phone charger. It has 200 reviews. Almost all of them give five stars and say \"Great charger!\" Many of the reviews were posted on the same day. Marta wants to buy one. She says: \"So many good reviews. It must be a good charger.\"", "questions": [{"id": "3.1", "q": "Why should Marta be careful about these reviews?", "options": [{"letter": "A", "text": "200 reviews are too few to judge a charger that many people buy"}, {"letter": "B", "text": "Five-star reviews on websites are always fake"}, {"letter": "C", "text": "Many repeat the same words on one day, so some may be fake"}, {"letter": "D", "text": "Marta has not tried the charger herself, so the reviews cannot help her"}]}, {"id": "3.2", "q": "What would help Marta most to decide whether the charger is good?", "options": [{"letter": "A", "text": "Another 200 reviews of the charger from the same website"}, {"letter": "B", "text": "How many people have bought the charger from the website in the last year"}, {"letter": "C", "text": "Whether the charger is the cheapest one the website sells"}, {"letter": "D", "text": "An outside test, by a group the seller does not control"}]}, {"id": "3.3", "q": "Marta then reads that a consumer group tested the charger. It found that the charger works, but gets very hot. What should Marta think now?", "options": [{"letter": "A", "text": "The test proves that the charger is dangerous to use"}, {"letter": "B", "text": "It works, but the heat is now a reason to worry"}, {"letter": "C", "text": "The test agrees that the charger works, so the reviews were right"}, {"letter": "D", "text": "The test and the reviews disagree, so she cannot trust either of them"}]}]}, {"title": "4. The green tea", "text": "It is May. A family friend, Gianni, says: \"In January I started drinking a cup of green tea every morning. I have not had a cold since. Green tea stops colds.\"", "questions": [{"id": "4.1", "q": "What is the main point Gianni is making?", "options": [{"letter": "A", "text": "Green tea stops people from getting colds"}, {"letter": "B", "text": "He has not had a cold since January"}, {"letter": "C", "text": "Drinking something warm every morning is good for you"}, {"letter": "D", "text": "Everyone should drink green tea every morning"}]}, {"id": "4.2", "q": "Which fact could also explain why Gianni has had no cold since January?", "options": [{"letter": "A", "text": "Gianni's brother also drinks green tea and has not had a cold either"}, {"letter": "B", "text": "In February, Gianni started working from home and now sees far fewer people"}, {"letter": "C", "text": "Gianni says he has felt healthier since he started the tea"}, {"letter": "D", "text": "Gianni had a cold last December, before he started the tea"}]}, {"id": "4.3", "q": "Does Gianni's experience show that green tea stops colds for other people?", "options": [{"letter": "A", "text": "Yes, because it worked for him"}, {"letter": "B", "text": "Yes, if other people drink as much as he does"}, {"letter": "C", "text": "No, because Gianni may not be telling the truth"}, {"letter": "D", "text": "No. One person over a few months cannot show this"}]}]}, {"title": "5. The missing lunch", "text": "In a shared office kitchen, Anna put her lunch in the fridge at nine in the morning. At noon it was gone. Anna says: \"It was Luca. He was the last person to go into the kitchen.\"", "questions": [{"id": "5.1", "q": "Does \"he was the last person to go into the kitchen\" show that Luca took the lunch?", "options": [{"letter": "A", "text": "Yes. If he was the last one to go in, nobody else had the chance"}, {"letter": "B", "text": "It is a reason to ask Luca, not proof that he took it"}, {"letter": "C", "text": "No. Being in the kitchen tells us nothing at all about the lunch"}, {"letter": "D", "text": "Yes, because Anna knows her colleagues and is sure it was him"}]}, {"id": "5.2", "q": "What would help most to find out what happened to the lunch?", "options": [{"letter": "A", "text": "Whether Luca says, when asked, that he did not take it"}, {"letter": "B", "text": "How sure Anna is that it was Luca"}, {"letter": "C", "text": "Who else went into the kitchen between nine and noon"}, {"letter": "D", "text": "Whether Anna and Luca get on well"}]}, {"id": "5.3", "q": "A cleaner then says that at eleven o'clock she emptied the fridge and threw away all food without a name on it. Anna's lunch had no name on it. What is the best thing to think now?", "options": [{"letter": "A", "text": "The cleaner is only saying this to protect Luca from blame"}, {"letter": "B", "text": "Nobody can ever know what happened, so it does not matter"}, {"letter": "C", "text": "Luca could still have taken it before eleven, so he is still the most likely"}, {"letter": "D", "text": "The cleaner probably threw it away, so blaming Luca no longer makes sense"}]}]}, {"title": "6. The library at work", "text": "A company has a small library for its staff. The managers want to close it. They say: \"Hardly anyone uses the library. Last year only a few people borrowed books.\" A group of staff reply that many people go to the library to read the newspapers, work in a quiet place and study for courses. These visits do not show up in the borrowing records.", "questions": [{"id": "6.1", "q": "What reason do the managers give for closing the library?", "options": [{"letter": "A", "text": "Closing it will save the company money"}, {"letter": "B", "text": "People now read on their phones instead of borrowing books"}, {"letter": "C", "text": "Few people use the library"}, {"letter": "D", "text": "The company needs the room for something else"}]}, {"id": "6.2", "q": "How does the staff's reply affect the managers' reason?", "options": [{"letter": "A", "text": "It proves that the managers are wrong and the library must stay open"}, {"letter": "B", "text": "It shows the records may miss other ways people use the library"}, {"letter": "C", "text": "It does not matter, because borrowing books is what a library is for"}, {"letter": "D", "text": "It shows that the managers really want the room for something else"}]}, {"id": "6.3", "q": "Which fact would best show how much the library is really used?", "options": [{"letter": "A", "text": "A count of everyone who comes in, over several normal weeks"}, {"letter": "B", "text": "The number of books borrowed in each of the last five years"}, {"letter": "C", "text": "How many staff say in a survey that they would miss the library"}, {"letter": "D", "text": "How much it costs the company to keep the library open"}]}]}], "it": [{"title": "Prova (non conta per il punteggio)", "text": "Tom guarda fuori dalla finestra e vede che piove. Dice: «Piove, quindi prendo l'ombrello.»", "questions": [{"id": "P.1", "q": "Cosa farà Tom?", "options": [{"letter": "A", "text": "Resterà a casa"}, {"letter": "B", "text": "Prenderà l'ombrello"}, {"letter": "C", "text": "Comprerà un ombrello nuovo"}]}]}, {"title": "1. La panetteria", "text": "Lucia ha una piccola panetteria. Il mese scorso ha cominciato a vendere il suo pane anche al mercato settimanale, con una bancarella. Nello stesso mese le vendite in negozio sono calate. Lucia dice: «La bancarella mi sta portando via i clienti del negozio.»", "questions": [{"id": "1.1", "q": "Secondo Lucia, cosa sta succedendo?", "options": [{"letter": "A", "text": "Ora la bancarella vende più pane del negozio"}, {"letter": "B", "text": "In città la gente compra meno pane di prima"}, {"letter": "C", "text": "Chi comprava in negozio ora va alla bancarella"}, {"letter": "D", "text": "Dovrebbe smettere di vendere al mercato per salvare il negozio"}]}, {"id": "1.2", "q": "Quale informazione aiuterebbe di più a capire se Lucia ha ragione?", "options": [{"letter": "A", "text": "Se chi comprava in negozio ora compra alla bancarella"}, {"letter": "B", "text": "Quanto pane vende ogni settimana alla bancarella da quando ha cominciato"}, {"letter": "C", "text": "Quante persone vanno al mercato ogni settimana"}, {"letter": "D", "text": "Se con la bancarella guadagna più di quanto spende"}]}, {"id": "1.3", "q": "Quale fatto, se fosse vero, potrebbe spiegare in un altro modo il calo delle vendite in negozio?", "options": [{"letter": "A", "text": "Al mercato vendeva tutto il pane ogni settimana"}, {"letter": "B", "text": "Il mese scorso, nella sua via, ha aperto un supermercato che vende pane"}, {"letter": "C", "text": "Due clienti abituali le hanno detto che ora comprano da lei al mercato"}, {"letter": "D", "text": "Gli orari del negozio sono rimasti gli stessi"}]}]}, {"title": "2. Il cartello", "text": "In una via residenziale tranquilla, le auto spesso andavano forte. A marzo il Comune ha messo un cartello con il limite di velocità. Ad aprile un vicino, Paolo, dice: «Da quando c'è il cartello le auto vanno più piano. Il cartello funziona.» Paolo non ha misurato la velocità. Dice che ha questa impressione quando porta fuori il cane, la mattina.", "questions": [{"id": "2.1", "q": "Cosa non va nel ragionamento di Paolo?", "options": [{"letter": "A", "text": "Abita in quella via, quindi la sua opinione vale meno di quella di un passante"}, {"letter": "B", "text": "Non dice quale limite c'è sul cartello, quindi non possiamo controllare"}, {"letter": "C", "text": "Cartelli come questo non cambiano mai il modo di guidare, quindi Paolo sbaglia"}, {"letter": "D", "text": "Non ha misurato niente: si basa su un'impressione, e solo di mattina"}]}, {"id": "2.2", "q": "Supponiamo che ad aprile le auto vadano davvero più piano. Quale fatto vorrebbe dire che forse non è merito del cartello?", "options": [{"letter": "A", "text": "Il cartello è grande, luminoso e ben visibile da chi guida"}, {"letter": "B", "text": "Anche altri vicini dicono che ora le auto vanno più piano"}, {"letter": "C", "text": "Ad aprile sono iniziati dei lavori nella via, e per passare bisogna rallentare"}, {"letter": "D", "text": "Ad aprile ci sono stati meno incidenti nella via rispetto ai mesi prima del cartello"}]}, {"id": "2.3", "q": "Un'altra vicina, Sara, ha una telecamera che ha registrato la velocità delle auto prima e dopo il cartello. Non si vede quasi nessuna differenza. Cosa è più sensato pensare adesso?", "options": [{"letter": "A", "text": "Le misurazioni di Sara sono più affidabili. Probabilmente il cartello non ha fatto rallentare le auto"}, {"letter": "B", "text": "Paolo non dice la verità su come vanno le auto nella sua via"}, {"letter": "C", "text": "I due vicini dicono cose diverse, quindi sul cartello non possiamo sapere niente"}, {"letter": "D", "text": "La registrazione e l'impressione valgono lo stesso, quindi la verità sta nel mezzo"}]}]}, {"title": "3. Il caricabatterie", "text": "Un sito vende un caricabatterie per il telefono. Ha 200 recensioni: quasi tutte danno cinque stelle e dicono «Ottimo caricabatterie!». Molte sono state pubblicate lo stesso giorno. Marta vuole comprarlo e dice: «Quante recensioni positive! Dev'essere un buon caricabatterie.»", "questions": [{"id": "3.1", "q": "Perché Marta dovrebbe fare attenzione a queste recensioni?", "options": [{"letter": "A", "text": "200 recensioni sono troppo poche per giudicare un caricabatterie che comprano in tanti"}, {"letter": "B", "text": "Le recensioni online a cinque stelle sono sempre false"}, {"letter": "C", "text": "Molte sono uguali e pubblicate lo stesso giorno: alcune potrebbero essere false"}, {"letter": "D", "text": "Marta non l'ha ancora provato, quindi le recensioni non possono aiutarla"}]}, {"id": "3.2", "q": "Cosa aiuterebbe di più Marta a capire se il caricabatterie è davvero buono?", "options": [{"letter": "A", "text": "Altre 200 recensioni del caricabatterie sullo stesso sito"}, {"letter": "B", "text": "Quante persone hanno comprato il caricabatterie sul sito nell'ultimo anno"}, {"letter": "C", "text": "Se è il caricabatterie più economico tra quelli che vende il sito"}, {"letter": "D", "text": "Un test fatto da qualcuno che non dipende dal venditore"}]}, {"id": "3.3", "q": "Poi Marta legge che un'associazione di consumatori ha testato il caricabatterie: funziona, ma si scalda molto. Cosa dovrebbe pensare adesso?", "options": [{"letter": "A", "text": "Il test dimostra che usare il caricabatterie è pericoloso"}, {"letter": "B", "text": "Funziona, ma il fatto che si scaldi così tanto è preoccupante"}, {"letter": "C", "text": "Il test conferma che funziona, quindi le recensioni avevano ragione"}, {"letter": "D", "text": "Il test e le recensioni dicono cose diverse, quindi non può fidarsi di nessuno dei due"}]}]}, {"title": "4. Il tè verde", "text": "È maggio. Gianni, un amico di famiglia, racconta: «A gennaio ho cominciato a bere una tazza di tè verde ogni mattina, e da allora non ho più preso il raffreddore. Il tè verde previene il raffreddore.»", "questions": [{"id": "4.1", "q": "Qual è la conclusione di Gianni?", "options": [{"letter": "A", "text": "Il tè verde previene il raffreddore"}, {"letter": "B", "text": "Da gennaio non ha più preso il raffreddore"}, {"letter": "C", "text": "Bere qualcosa di caldo ogni mattina fa bene"}, {"letter": "D", "text": "Tutti dovrebbero bere il tè verde ogni mattina"}]}, {"id": "4.2", "q": "Quale fatto potrebbe spiegare in un altro modo perché Gianni non prende il raffreddore da gennaio?", "options": [{"letter": "A", "text": "Anche il fratello di Gianni beve tè verde, e nemmeno lui ha preso il raffreddore"}, {"letter": "B", "text": "A febbraio Gianni ha cominciato a lavorare da casa e ora vede molta meno gente"}, {"letter": "C", "text": "Gianni dice che da quando beve il tè si sente più in forma"}, {"letter": "D", "text": "Gianni ha avuto il raffreddore a dicembre, prima di cominciare con il tè"}]}, {"id": "4.3", "q": "L'esperienza di Gianni dimostra che il tè verde previene il raffreddore anche nelle altre persone?", "options": [{"letter": "A", "text": "Sì, perché con lui ha funzionato"}, {"letter": "B", "text": "Sì, se gli altri ne bevono quanto lui"}, {"letter": "C", "text": "No, perché Gianni potrebbe non dire la verità"}, {"letter": "D", "text": "No: un solo caso e pochi mesi non bastano"}]}]}, {"title": "5. Il pranzo sparito", "text": "In ufficio c'è una cucina che usano tutti. Alle nove del mattino Anna ha messo il suo pranzo nel frigo. A mezzogiorno il pranzo non c'era più. Anna dice: «È stato Luca. È entrato in cucina per ultimo.»", "questions": [{"id": "5.1", "q": "Il fatto che Luca sia entrato in cucina per ultimo dimostra che il pranzo l'ha preso lui?", "options": [{"letter": "A", "text": "Sì. Se è entrato per ultimo, nessun altro ha avuto l'occasione"}, {"letter": "B", "text": "È un motivo per parlarne con Luca, ma non prova che sia stato lui"}, {"letter": "C", "text": "No. Essere stato in cucina non ci dice proprio niente sul pranzo"}, {"letter": "D", "text": "Sì, perché Anna conosce i suoi colleghi ed è sicura che sia stato lui"}]}, {"id": "5.2", "q": "Cosa aiuterebbe di più a capire che fine ha fatto il pranzo?", "options": [{"letter": "A", "text": "Se Luca, quando glielo chiedono, dice di non averlo preso"}, {"letter": "B", "text": "Quanto Anna è sicura che sia stato Luca"}, {"letter": "C", "text": "Chi altro è entrato in cucina tra le nove e mezzogiorno"}, {"letter": "D", "text": "Se Anna e Luca vanno d'accordo"}]}, {"id": "5.3", "q": "Poi l'addetta alle pulizie racconta che alle undici ha svuotato il frigo e ha buttato via tutto il cibo senza il nome scritto sopra. Sul pranzo di Anna non c'era il nome. Cosa è più sensato pensare adesso?", "options": [{"letter": "A", "text": "L'addetta racconta questa storia solo per coprire Luca"}, {"letter": "B", "text": "Non si potrà mai sapere cosa è successo, quindi non importa"}, {"letter": "C", "text": "Luca potrebbe averlo preso prima delle undici, quindi resta il principale sospettato"}, {"letter": "D", "text": "Probabilmente l'ha buttato via l'addetta: accusare Luca non ha più senso"}]}]}, {"title": "6. La biblioteca aziendale", "text": "Un'azienda ha una piccola biblioteca per i dipendenti. La direzione vuole chiuderla e spiega: «Quasi nessuno la usa. L'anno scorso solo poche persone hanno preso libri in prestito.» Un gruppo di dipendenti risponde che in molti vanno in biblioteca a leggere i giornali, a lavorare in tranquillità o a studiare per dei corsi. Queste visite non compaiono nel registro dei prestiti.", "questions": [{"id": "6.1", "q": "Che motivo dà la direzione per chiudere la biblioteca?", "options": [{"letter": "A", "text": "Chiuderla fa risparmiare soldi all'azienda"}, {"letter": "B", "text": "Ormai la gente legge sul telefono e non prende più libri in prestito"}, {"letter": "C", "text": "La biblioteca la usano in pochi"}, {"letter": "D", "text": "L'azienda ha bisogno della stanza per altro"}]}, {"id": "6.2", "q": "Cosa cambia nel ragionamento della direzione dopo la risposta dei dipendenti?", "options": [{"letter": "A", "text": "Dimostra che la direzione ha torto e che la biblioteca deve restare aperta"}, {"letter": "B", "text": "Il registro conta i prestiti. Chi entra solo per leggere o studiare non compare"}, {"letter": "C", "text": "Non cambia nulla, perché una biblioteca serve a prendere libri in prestito"}, {"letter": "D", "text": "Mostra che in realtà la direzione vuole la stanza per altro"}]}, {"id": "6.3", "q": "Quale informazione mostrerebbe meglio quanto viene usata davvero la biblioteca?", "options": [{"letter": "A", "text": "Quante persone entrano in biblioteca in diverse settimane normali"}, {"letter": "B", "text": "Quanti libri sono stati presi in prestito ogni anno, negli ultimi cinque anni"}, {"letter": "C", "text": "Quanti dipendenti dicono in un sondaggio che la biblioteca gli mancherebbe"}, {"letter": "D", "text": "Quanto costa all'azienda tenere aperta la biblioteca"}]}]}]}};
+// Answers and the comment go to one Google Form, posted from the page in the background: the participant
+// taps one button and never sees the form. The entry ids are the form's three Short answer fields. If the
+// browser blocks the post, the page says so and offers the pre-filled form link instead.
+const FORM = {
+  url: "https://docs.google.com/forms/d/e/1FAIpQLSdZYK74LV5x8cKm-QlPWrmbajHLxzRl8NDzFVoOnV76HmbdBQ/viewform",
+  post: "https://docs.google.com/forms/d/e/1FAIpQLSdZYK74LV5x8cKm-QlPWrmbajHLxzRl8NDzFVoOnV76HmbdBQ/formResponse",
+  codeEntry: "entry.1859132181",
+  answersEntry: "entry.304645152",
+  commentEntry: "entry.1352933635",
+};
+// Keys, points and reasons, base64 so a quick look at the source does not show them. Not a secret from a determined reader.
+function decodeRes(b64) {
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))));
+}
+const RES = decodeRes(BANK.res);
+const UI = {
+  en: {
+    eyebrow: "Draft questions", h1: "Thinking about reasons", voice: "en-GB",
+    aboutLink: "About", aboutTitle: "About Civic Pulse", aboutBack: "Back to the questions",
+    aboutInvite: "New here? Read what Civic Pulse is about first.",
+    unsure: "I'm not sure", back: "Back", backResults: "Back to results", next: "Next", finish: "Finish", practice: "Practice",
+    practiceChip: "Practice question", chosen: "Chosen", readAloud: "Read aloud",
+    qOf: (n, t) => `Question ${n} of ${t}`, start: "Start", cont: "Continue",
+    intro: "These are draft questions for a project called Civic Pulse. Each one starts with a short everyday situation. Then you choose the answer that fits the facts best.",
+    rules: (n, m, t) => [
+      "There is no timer. Take as long as you like.",
+      `There are ${n} questions, plus one practice question first.`,
+      "You can go back and change any answer until you ask for your results.",
+      "If you are not sure, choose “I'm not sure”. That is a real answer.",
+      "Your answers stay on this phone unless you choose to send them.",
+      "At the end one button sends your answers, and a comment if you write one. We do not ask for your name or email.",
+      `Then you see your score and where it sits on a scale from 0 to ${t}.`,
+    ],
+    listen: "Each situation has a <strong>Read aloud</strong> button if you prefer to listen.",
+    thanks: "Thank you", answered: (d, t) => `Answered: ${d} of ${t}`, unsureN: (n) => `“I'm not sure”: ${n}`,
+    missing: (l) => `Not answered yet: ${l}. Use Back to return to them.`,
+    prompts: ["Were any words hard to understand?", "Did any question seem unfair?", "Was it too long?", "What would you change?"],
+    clear: "Clear my answers from this phone", clearYes: "Yes, clear my answers", clearNo: "Keep them",
+    restart: "Restart the test", restartYes: "Yes, restart", restartNo: "Keep my results",
+    restartNote: "Your answers and score on this phone will be cleared. Answers you already sent stay sent.",
+    lastScore: "Here is your last score on this phone.",
+    step1Title: "1. Send your answers (optional)",
+    step1Text: (c) => `We get your answers and a code for this phone, ${c}, so we can tell different people's answers apart. We do not ask for your name or email.`,
+    commentLabel: "A comment on the test (optional). Some ideas:",
+    sending: "Sending…", sentBtn: "Sent ✓", sendAgain: "Send again",
+    failNote: "This page could not send your answers. You can send them with the form instead:", failLink: "Open the form",
+    sendAnswers: "Send my answers",
+    sentNote: "Your answers are sent. Thank you.",
+    step2Title: "2. See your results",
+    step2Text: "See your score, and why each answer is marked the way it is. After that, you cannot change your answers.",
+    showResults: "See my results",
+    confirmReveal: "Your answers will be locked.",
+    notSentWarn: "You have not sent your answers yet. If you send them later, they are marked as sent after you saw the results.",
+    revealYes: "Yes, show my results", revealNo: "Not yet",
+    resultsTitle: "Your results", score: (p, t) => `${p} of ${t} points`,
+    counts: (c) => `Right: ${c.right} · Partly right: ${c.partial} · Wrong: ${c.wrong} · Not sure: ${c.unsure} · No answer: ${c.blank}`,
+    how: (f) => `A right answer scores ${f.right}, a partly right one ${f.partial} and a wrong one ${f.wrong}. ${f.unsure === "0" ? "“I'm not sure” and a question with no answer both score 0." : `“I'm not sure” scores ${f.unsure}, and a question with no answer scores 0.`}`,
+    scores: "scores",
+    you: "You", where: (m) => `This is where you landed on the scale. The colour turns from red to green at about ${m} points.`,
+    gaugeLabel: (p, t, m) => `${p} on a scale from 0 to ${t}; the colour turns from red to green at ${m}`,
+    draftNote: "This is a draft. The pilot tests the questions and the scale as much as it tests you.",
+    review: "Go through the questions",
+    st: { right: "✓ Right", partial: "◐ Partly right", wrong: "✗ Wrong", unsure: "– Not sure", blank: "· No answer" },
+    keyTag: "Right answer", yourTag: "Your answer", yourRight: "Your answer · right", whyTitle: "Why",
+  },
+  it: {
+    eyebrow: "Domande in bozza", h1: "Ragionare sulle ragioni", voice: "it-IT",
+    aboutLink: "Il progetto", aboutTitle: "Cos'è Civic Pulse", aboutBack: "Torna alle domande",
+    aboutInvite: "È la prima volta? Leggi prima cos'è Civic Pulse.",
+    unsure: "Non saprei", back: "Indietro", backResults: "Torna ai risultati", next: "Avanti", finish: "Fine", practice: "Prova",
+    practiceChip: "Domanda di prova", chosen: "Scelta", readAloud: "Ascolta",
+    qOf: (n, t) => `Domanda ${n} di ${t}`, start: "Inizia", cont: "Continua",
+    intro: "Sono domande in bozza per un progetto che si chiama Civic Pulse. Ognuna parte da una breve situazione quotidiana. Tu scegli la risposta più coerente con i fatti.",
+    rules: (n, m, t) => [
+      "Non c'è un tempo limite: prenditi tutto il tempo che ti serve.",
+      `Ci sono ${n} domande, più una di prova all'inizio.`,
+      "Puoi tornare indietro e cambiare le risposte, finché non chiedi i risultati.",
+      "Se hai dubbi, scegli “Non saprei”: è una risposta come le altre.",
+      "Le risposte restano su questo telefono, a meno che tu non decida di inviarle.",
+      "Alla fine, con un solo pulsante, invii le risposte e, se vuoi, un commento. Non chiediamo né nome né email.",
+      `Poi vedi il tuo punteggio e dove si colloca su una scala da 0 a ${t}.`,
+    ],
+    listen: "Ogni situazione ha un pulsante <strong>Ascolta</strong>, se preferisci sentire il testo invece di leggerlo.",
+    thanks: "Grazie", answered: (d, t) => `Risposte date: ${d} su ${t}`, unsureN: (n) => `“Non saprei”: ${n}`,
+    missing: (l) => `Senza risposta: ${l}. Con Indietro puoi tornarci.`,
+    prompts: ["C'erano parole difficili da capire?", "Qualche domanda ti è sembrata ingiusta?", "Era troppo lungo?", "Cosa cambieresti?"],
+    clear: "Cancella le mie risposte da questo telefono", clearYes: "Sì, cancellale", clearNo: "No, tienile",
+    restart: "Ricomincia il test", restartYes: "Sì, ricomincia", restartNo: "Tieni i risultati",
+    restartNote: "Le risposte e il punteggio su questo telefono verranno cancellati. Le risposte già inviate restano inviate.",
+    lastScore: "Ecco l'ultimo punteggio ottenuto su questo telefono.",
+    step1Title: "1. Invia le tue risposte (se vuoi)",
+    step1Text: (c) => `Riceviamo le tue risposte e un codice anonimo di questo telefono, ${c}, che ci serve a distinguere le risposte di persone diverse. Non chiediamo né nome né email.`,
+    commentLabel: "Un commento sul test (se vuoi). Qualche spunto:",
+    sending: "Invio in corso…", sentBtn: "Inviate ✓", sendAgain: "Invia di nuovo",
+    failNote: "Questa pagina non è riuscita a inviare le risposte. Puoi inviarle con il modulo:", failLink: "Apri il modulo",
+    sendAnswers: "Invia le mie risposte",
+    sentNote: "Risposte inviate. Grazie.",
+    step2Title: "2. Scopri i risultati",
+    step2Text: "Vedrai il tuo punteggio e perché ogni risposta è valutata così. Dopo, però, non potrai più cambiare le risposte.",
+    showResults: "Mostra i risultati",
+    confirmReveal: "Da qui in poi le risposte non si possono più cambiare.",
+    notSentWarn: "Non hai ancora inviato le risposte. Se le invii dopo, ci arriveranno segnate come inviate dopo aver visto i risultati.",
+    revealYes: "Sì, mostra i risultati", revealNo: "Non ancora",
+    resultsTitle: "I tuoi risultati", score: (p, t) => `${p} punti su ${t}`,
+    counts: (c) => `Giuste: ${c.right} · In parte giuste: ${c.partial} · Sbagliate: ${c.wrong} · Non saprei: ${c.unsure} · Senza risposta: ${c.blank}`,
+    how: (f) => `Una risposta giusta vale ${f.right}, una in parte giusta ${f.partial}, una sbagliata ${f.wrong}. ${f.unsure === "0" ? "“Non saprei” e una domanda senza risposta valgono 0." : `“Non saprei” vale ${f.unsure}, una domanda senza risposta vale 0.`}`,
+    scores: "vale",
+    you: "Tu", where: (m) => `Ecco dove ti collochi sulla scala. Il colore passa dal rosso al verde intorno ai ${m} punti.`,
+    gaugeLabel: (p, t, m) => `${p} su una scala da 0 a ${t}; il colore passa dal rosso al verde a ${m}`,
+    draftNote: "È una bozza: in questa fase verifichiamo le domande e la scala, non solo te.",
+    review: "Rivedi le domande",
+    st: { right: "✓ Giusta", partial: "◐ In parte giusta", wrong: "✗ Sbagliata", unsure: "– Non saprei", blank: "· Senza risposta" },
+    keyTag: "Risposta giusta", yourTag: "La tua risposta", yourRight: "La tua risposta · giusta", whyTitle: "Perché",
+  },
+};
+const STORE = `cp-participant-${BANK.version}`;
+let lang = null;
+let answers = {};
+let screen = 0;
+let confirmClear = false;
+let confirmReveal = false;
+// revealed: results shown, answers locked. opened: the answers were sent at least once in this attempt (the
+// stored name is older than the background send). sentLine: attempt and answers last sent. attempt: goes up on every clear.
+// seenAt: the attempt in which results were first shown on this phone; it survives a clear.
+let revealed = false, opened = false, attempt = 1, seenAt = null, sentLine = null;
+let sendState = "idle", comment = "", sentComment = "";
+// fromResults: a question opened from the results list; Back then returns to the results.
+let fromResults = false;
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE) || "null");
+  if (saved && typeof saved === "object") {
+    answers = saved.answers || {}; screen = saved.screen || 0;
+    if (BANK.langs[saved.lang]) lang = saved.lang;
+    revealed = Boolean(saved.revealed); opened = Boolean(saved.opened);
+    attempt = Number(saved.attempt) || 1; seenAt = saved.seenAt ?? null; sentLine = saved.sentLine ?? null;
+  }
+} catch (e) {}
+// One anonymous code per phone and browser, kept across versions.
+function newCode() {
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", b = new Uint8Array(6);
+  crypto.getRandomValues(b);
+  return Array.from(b, (x) => A[x % 32]).join("");
+}
+let code = null;
+try { code = localStorage.getItem("cp-code"); } catch (e) {}
+if (!code || !/^[A-Z2-9]{6}$/.test(code)) {
+  code = newCode();
+  try { localStorage.setItem("cp-code", code); } catch (e) {}
+}
+if (!lang) lang = (navigator.language || "").toLowerCase().startsWith("it") ? "it" : "en";
+
+let items = [];
+const isPractice = (q) => q.id.startsWith("P");
+function load() { items = []; BANK.langs[lang].forEach((s) => s.questions.forEach((q) => items.push({ s, q }))); }
+load();
+const scored = () => items.filter((it) => !isPractice(it.q));
+// Screens: 0 welcome, 1..items.length questions, last the end screen.
+const END = items.length + 1;
+screen = Math.min(screen, END);
+// Coming back after seeing results: open on the last score, with Restart at hand. returned: this load only.
+let returned = false;
+if (revealed && location.hash !== "#about") { screen = END; returned = true; }
+
+const $ = (id) => document.getElementById(id);
+const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const canSpeak = "speechSynthesis" in window;
+const save = () => {
+  try { localStorage.setItem(STORE, JSON.stringify({ answers, screen, lang, revealed, opened, attempt, seenAt, sentLine })); } catch (e) {}
+};
+const T = () => UI[lang];
+// Each answer has a category (right, partial, wrong, unsure) and each category its points, both from
+// the scoring workbook. No answer scores 0. The practice item is not in the workbook and shows no points.
+const hasPoints = (id) => Boolean(RES.score.cat[id]);
+const catOf = (id, l) => (hasPoints(id) ? RES.score.cat[id][l] : l === RES.keys[id] ? "right" : l === "?" ? "unsure" : "wrong");
+const status = (id) => (answers[id] === undefined ? "blank" : catOf(id, answers[id]));
+const pointsOf = (id, l) => RES.score.table[catOf(id, l)];
+const points = (id) => (answers[id] === undefined ? 0 : pointsOf(id, answers[id]));
+const tally = (k) => scored().filter((it) => status(it.q.id) === k).length;
+const counts = () => Object.fromEntries(["right", "partial", "wrong", "unsure", "blank"].map((k) => [k, tally(k)]));
+const total = () => Math.round(scored().reduce((n, it) => n + points(it.q.id), 0) * 100) / 100;
+const maxTotal = () => scored().length * RES.score.table.right;
+const passed = () => total() >= RES.score.pass;
+const num = (n) => (n < 0 ? "−" : "") + Math.abs(n).toLocaleString(lang === "it" ? "it-IT" : "en-GB", { maximumFractionDigits: 2 });
+const signed = (n) => (n > 0 ? "+" : "") + num(n);
+
+// One line for the form's Answers field, read by Marco, so it stays in English.
+function answerLine() {
+  const sc = scored();
+  const when = seenAt === null ? "before results"
+    : seenAt === attempt ? "sent after results, answers locked first" : "redone after seeing results";
+  const list = sc.map((it) => `${it.q.id}=${answers[it.q.id] ?? "-"}`).join(" ");
+  const c = counts();
+  return `v${BANK.version} ${lang} | points ${total()}/${maxTotal()}, mark ${RES.score.pass}, ${passed() ? "at or above" : "below"} | right ${c.right}, partly ${c.partial}, wrong ${c.wrong}, not sure ${c.unsure}, blank ${c.blank} | attempt ${attempt}, ${when} | ${list}`;
+}
+const sendKey = () => `${attempt}|${scored().map((it) => answers[it.q.id] ?? "-").join("")}`;
+function fields() {
+  const q = new URLSearchParams();
+  q.set(FORM.codeEntry, code); q.set(FORM.answersEntry, answerLine());
+  if (comment.trim()) q.set(FORM.commentEntry, comment.trim());
+  return q;
+}
+function formLink() { const q = fields(); q.set("usp", "pp_url"); return `${FORM.url}?${q}`; }
+// A post the browser refuses (the page's security policy) shows up here.
+let blocked = false;
+document.addEventListener("securitypolicyviolation", (e) => { if (String(e.blockedURI || "").includes("docs.google.com")) blocked = true; });
+// Background post: fetch without reading the reply first; if fetch is refused, a hidden form into a hidden frame.
+function postViaFrame(body) {
+  return new Promise((resolve) => {
+    const name = `cp-sink-${Date.now()}`;
+    const frame = document.createElement("iframe"); frame.name = name; frame.hidden = true;
+    const form = document.createElement("form"); form.method = "POST"; form.action = FORM.post; form.target = name; form.hidden = true;
+    body.forEach((v, k) => { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; form.appendChild(i); });
+    let done = false;
+    const finish = () => { if (done) return; done = true; setTimeout(() => { frame.remove(); form.remove(); }, 1000); resolve(!blocked); };
+    frame.addEventListener("load", () => setTimeout(finish, 300));
+    setTimeout(finish, 6000);
+    document.body.append(frame, form);
+    try { form.submit(); } catch (e) { blocked = true; finish(); }
+  });
+}
+async function sendAnswers() {
+  if (sendState === "sending") return;
+  sendState = "sending"; blocked = false; render();
+  const body = fields(), line = sendKey();
+  let ok = false;
+  try { await fetch(FORM.post, { method: "POST", mode: "no-cors", body }); ok = !blocked; } catch (e) { ok = false; }
+  if (!ok) { blocked = false; ok = await postViaFrame(body); }
+  if (ok) { sendState = "sent"; opened = true; sentLine = line; sentComment = comment; }
+  else sendState = "failed";
+  save(); render();
+}
+
+function speak(text) {
+  if (!canSpeak) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = T().voice; u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+
+function welcome() {
+  const started = Object.keys(answers).length > 0;
+  return `<section class="panel">
+    <p class="lede">${T().intro}</p>
+    <ul>${T().rules(scored().length, num(RES.score.pass), num(maxTotal())).map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
+    ${canSpeak ? `<p>${T().listen}</p>` : ""}
+    <p><a href="#about">${esc(T().aboutInvite)}</a></p>
+    <div class="row"><button class="big" type="button" id="start">${started ? T().cont : T().start}</button></div>
+  </section>`;
+}
+
+function question(i) {
+  const { s, q } = items[i];
+  const picked = answers[q.id];
+  const key = RES.keys[q.id];
+  const opts = [...q.options, { letter: "?", text: T().unsure }].map((o) => {
+    let cls = "opt", tag = "";
+    if (revealed) {
+      const st = catOf(q.id, o.letter), pts = hasPoints(q.id) ? ` · ${signed(pointsOf(q.id, o.letter))}` : "";
+      const tone = { right: " ok", partial: " half", wrong: " no", unsure: "" }[st];
+      if (o.letter === key) {
+        cls += " is-key"; tag = `<span class="tag ok">${picked === key ? T().yourRight : T().keyTag}${pts}</span>`;
+      } else if (o.letter === picked) {
+        cls += { partial: " is-half", wrong: " is-wrong", unsure: " is-mine" }[st];
+        tag = `<span class="tag${tone}">${T().yourTag}${pts}</span>`;
+      } else if (pts) tag = `<span class="tag">${pts.slice(3)}</span>`;
+    } else if (picked === o.letter) tag = `<span class="tick">${T().chosen}</span>`;
+    return `
+    <li><button type="button" class="${cls}" data-l="${o.letter}" aria-pressed="${picked === o.letter}"${revealed ? ' aria-disabled="true"' : ""}>
+      <span class="letter">${o.letter}</span><span>${esc(o.text)}</span>${tag}
+    </button></li>`;
+  }).join("");
+  return `<div class="panel">
+    ${isPractice(q) ? `<span class="chip">${T().practiceChip}</span>` : ""}
+    <section class="situation">
+      <h2><span>${esc(s.title.replace(/^\d+\.\s*/, "").replace(/\s*\(.*\)$/, ""))}</span>${canSpeak ? `<button class="say" type="button" id="say"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>${T().readAloud}</button>` : ""}</h2>
+      <p>${esc(s.text)}</p>
+    </section>
+    <p class="question">${esc(q.q)}</p>
+    <ul class="options">${opts}</ul>
+    ${revealed ? `<section class="reason"><h2>${T().whyTitle}</h2><p>${esc(RES.why[lang][q.id])}</p></section>` : ""}
+  </div>`;
+}
+
+function sendStep() {
+  let title = T().step1Title;
+  if (revealed) title = title.replace(/^\d\.\s*/, "");
+  const same = sentLine === sendKey() && sentComment === comment;
+  const label = sendState === "sending" ? T().sending : same ? T().sentBtn : sentLine ? T().sendAgain : T().sendAnswers;
+  const note = sendState === "failed"
+    ? `<p class="note">${esc(T().failNote)} <a href="${esc(formLink())}" target="_blank" rel="noopener">${esc(T().failLink)}</a></p>`
+    : same ? `<p class="note">${esc(T().sentNote)}</p>` : "";
+  return `<section class="step">
+    <h2>${esc(title)}</h2>
+    <p>${esc(T().step1Text(code))}</p>
+    <label for="comment">${esc(T().commentLabel)}</label>
+    <ul>${T().prompts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+    <textarea id="comment" rows="4">${esc(comment)}</textarea>
+    <div class="row"><button class="big" type="button" id="send"${sendState === "sending" || same ? " disabled" : ""}>${esc(label)}</button></div>
+    ${note}
+  </section>`;
+}
+
+function revealStep() {
+  return `<section class="step">
+    <h2>${T().step2Title}</h2>
+    <p>${esc(T().step2Text)}</p>
+    ${confirmReveal
+      ? `<p><strong>${esc(T().confirmReveal)}</strong>${!opened ? ` ${esc(T().notSentWarn)}` : ""}</p>
+    <div class="row"><button class="big" type="button" id="reveal-yes">${T().revealYes}</button><button class="big quiet" type="button" id="reveal-no">${T().revealNo}</button></div>`
+      : `<div class="row"><button class="big" type="button" id="reveal">${T().showResults}</button></div>`}
+  </section>`;
+}
+
+function clearRow() {
+  return `<div class="row">${confirmClear
+    ? `<button class="big" type="button" id="clear-yes">${T().clearYes}</button><button class="big quiet" type="button" id="clear-no">${T().clearNo}</button>`
+    : `<button class="big quiet" type="button" id="clear">${T().clear}</button>`}</div>`;
+}
+// After results: Restart beside "Go through the questions"; the same clear, worded as starting again.
+function resultsRow() {
+  return confirmClear
+    ? `<p><strong>${esc(T().restartNote)}</strong></p>
+    <div class="row"><button class="big" type="button" id="clear-yes">${T().restartYes}</button><button class="big quiet" type="button" id="clear-no">${T().restartNo}</button></div>`
+    : `<div class="row"><button class="big" type="button" id="review">${T().review}</button><button class="big quiet" type="button" id="clear">${T().restart}</button></div>`;
+}
+
+// Where the score sits between 0 and the highest score; below 0 sits at the left end.
+function gauge() {
+  const max = maxTotal(), mid = RES.score.pass, at = (v) => (Math.max(0, Math.min(max, v)) / max) * 100;
+  const pct = at(total()), edge = pct < 8 ? " edge-l" : pct > 92 ? " edge-r" : "";
+  const marks = [0, Math.round(max / 3), mid, max].filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+  const ticks = marks.map((v) => `<span class="${v === mid ? "mid" : ""}" style="left:${at(v)}%">${num(v)}</span>`).join("");
+  return `<div class="gauge" role="img" style="--mid:${at(mid)}%" aria-label="${esc(T().gaugeLabel(num(total()), num(max), num(mid)))}">
+      <div class="pin${edge}" style="left:${pct}%"><b>${T().you} · ${num(total())}</b><i></i><s></s></div>
+      <div class="track"></div>
+      <div class="notch" style="left:${at(mid)}%"></div>
+      <div class="ticks">${ticks}</div>
+    </div>`;
+}
+
+function end() {
+  const sc = scored();
+  if (revealed) {
+    const mark = { right: "ok", partial: "half", wrong: "no", unsure: "na", blank: "na" };
+    const rows = sc.map((it) => {
+      const st = status(it.q.id);
+      return `<li><button class="ghost" type="button" data-go="${items.indexOf(it) + 1}">${esc(it.q.id)}</button><span class="mark ${mark[st]}">${T().st[st]}</span><span class="pts mark ${mark[st]}">${signed(points(it.q.id))}</span></li>`;
+    }).join("");
+    const f = Object.fromEntries(Object.entries(RES.score.table).map(([k, v]) => [k, signed(v)]));
+    return `<section class="panel">
+    <h2>${T().resultsTitle}</h2>
+    ${returned ? `<p class="note">${esc(T().lastScore)}</p>` : ""}
+    <p class="score">${T().score(num(total()), num(maxTotal()))}</p>
+    ${gauge()}
+    <p>${esc(T().where(num(RES.score.pass)))}</p>
+    <p class="summary">${T().counts(counts())}</p>
+    <p>${esc(T().how(f))}</p>
+    <p>${esc(T().draftNote)}</p>
+    ${resultsRow()}
+    <ul class="results">${rows}</ul>
+    ${sendStep()}
+  </section>`;
+  }
+  const done = sc.filter((it) => answers[it.q.id] !== undefined).length;
+  const unsure = tally("unsure");
+  const missing = sc.filter((it) => answers[it.q.id] === undefined).map((it) => it.q.id);
+  return `<section class="panel">
+    <h2>${T().thanks}</h2>
+    <p class="summary">${T().answered(done, sc.length)}${unsure ? ` · ${T().unsureN(unsure)}` : ""}</p>
+    ${missing.length ? `<p>${esc(T().missing(missing.join(", ")))}</p>` : ""}
+    ${sendStep()}
+    ${revealStep()}
+    ${clearRow()}
+  </section>`;
+}
+
+function about() {
+  return `<article class="about">${BANK.about[lang]}
+    <div class="row"><button class="big" type="button" id="about-back">${T().aboutBack}</button></div>
+  </article>`;
+}
+
+function render() {
+  if (canSpeak) speechSynthesis.cancel();
+  const reading = location.hash === "#about";
+  document.body.classList.toggle("reading", reading);
+  $("about-link").textContent = T().aboutLink;
+  $("about-link").hidden = reading;
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+  $("eyebrow").textContent = `${T().eyebrow} · v${BANK.version}`;
+  $("h1").textContent = reading ? T().aboutTitle : T().h1;
+  $("prev").textContent = fromResults && screen > 0 && screen < END ? T().backResults : T().back;
+  $("prog").style.width = `${(screen / END) * 100}%`;
+  $("prev").disabled = screen === 0;
+  $("next").disabled = screen === END;
+  $("next").textContent = screen === END - 1 ? T().finish : T().next;
+  if (reading) {
+    $("view").innerHTML = about();
+    $("about-back").addEventListener("click", () => { location.hash = ""; window.scrollTo(0, 0); });
+    return;
+  }
+  if (screen === 0) { $("count").textContent = ""; $("view").innerHTML = welcome(); }
+  else if (screen === END) { $("count").textContent = ""; $("view").innerHTML = end(); }
+  else {
+    const it = items[screen - 1];
+    const n = items.slice(0, screen).filter((x) => !isPractice(x.q)).length;
+    $("count").textContent = isPractice(it.q) ? T().practice : T().qOf(n, scored().length);
+    $("view").innerHTML = question(screen - 1);
+    if (!revealed) $("view").querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => {
+      answers[it.q.id] = b.dataset.l; save(); render();
+    }));
+    const say = $("say");
+    const mine = answers[it.q.id];
+    const after = revealed ? ` ${T().keyTag}: ${RES.keys[it.q.id]}.${mine === undefined || !hasPoints(it.q.id) ? "" : ` ${T().yourTag}: ${mine === "?" ? T().unsure : mine}, ${T().scores} ${signed(points(it.q.id))}.`} ${T().whyTitle}. ${RES.why[lang][it.q.id]}` : "";
+    if (say) say.addEventListener("click", () => speak(
+      `${it.s.text} ${it.q.q} ${it.q.options.map((o) => `${o.letter}. ${o.text}.`).join(" ")} ${T().unsure}.${after}`));
+  }
+  const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
+  bind("start", () => go(1));
+  bind("clear", () => { confirmClear = true; render(); });
+  bind("clear-no", () => { confirmClear = false; render(); });
+  bind("clear-yes", () => {
+    answers = {}; confirmClear = false; revealed = false; opened = false; attempt += 1;
+    sentLine = null; sentComment = ""; comment = ""; sendState = "idle";
+    go(0);
+  });
+  bind("send", sendAnswers);
+  const box = $("comment");
+  if (box) box.addEventListener("input", () => {
+    comment = box.value;
+    const btn = $("send");  // update the button without a re-render, so typing keeps focus
+    if (btn && sendState !== "sending") {
+      const same = sentLine === sendKey() && sentComment === comment;
+      btn.disabled = same; btn.textContent = same ? T().sentBtn : sentLine ? T().sendAgain : T().sendAnswers;
+    }
+  });
+  bind("reveal", () => { confirmReveal = true; render(); });
+  bind("reveal-no", () => { confirmReveal = false; render(); });
+  bind("reveal-yes", () => {
+    revealed = true; confirmReveal = false;
+    if (seenAt === null) seenAt = attempt;
+    save(); render(); window.scrollTo(0, 0);
+  });
+  bind("review", () => { fromResults = false; go(1); });
+  $("view").querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => { fromResults = true; go(Number(b.dataset.go)); }));
+}
+
+function go(n) { returned = false; screen = Math.max(0, Math.min(END, n)); if (screen === 0 || screen === END) fromResults = false; confirmClear = false; confirmReveal = false; save(); render(); window.scrollTo(0, 0); }
+$("prev").addEventListener("click", () => go(fromResults ? END : screen - 1));
+$("next").addEventListener("click", () => go(screen + 1));
+document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => {
+  lang = b.dataset.lang; load(); save(); render();
+}));
+window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
+render();
+</script>
+
+</body>
+</html>
